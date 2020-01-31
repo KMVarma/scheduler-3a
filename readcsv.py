@@ -10,6 +10,7 @@ Original file is located at
 import re
 from collections import namedtuple
 from openpyxl import load_workbook
+import warnings
 
 # For Colab runtime - must choose file 'CourseCatalogSpring2020.xlsx' from local storage
 #from google.colab import files
@@ -22,6 +23,7 @@ def create_course_dict():
     Values: namedtuple of the form('name, prereqs, credits')
             prereqs is a tuple of prereqs where each prereq has the same form as the keys
     """
+    warnings.simplefilter("ignore")
     wb = load_workbook('CourseCatalogSpring2020.xlsx')
     catalog = wb.get_sheet_by_name('catalog')
     Course = namedtuple('Course', 'program, designation')
