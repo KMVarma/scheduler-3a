@@ -51,12 +51,23 @@ class TestCourseScheduler(unittest.TestCase):
     def test_cs_major(self):
         # testing the scheduler when only the cs major is the goal and the student has no initial credit
         plan = course_scheduler(self.course_dict, [], [])
+        split_plan = split_by_term(plan)
+        for year in split_plan:
+            for term in split_plan:
+                credit = split_plan[year][term]['credits']
+                # ensuring proper number of credits every term
+                self.assertTrue(12 <= credit <= 18)
+
+    def test_goal_satisfied(self):
+        # testing the scheduler when the provided goal has already been satisfied
+        plan = course_scheduler(self.course_dict, [('CS','1101')], [('CS','1101')])
         self.assertEqual(plan, ())
-        
-    def test_class_goal(self):
-        # testing the scheduler when only a class, not a major, is the goal
-        plan = course_scheduler(self.course_dict, [], [])
-        self.assertEqual(plan, ())
+
+    def test_one_class_goal(self):
+        # sum of credits must not be less than 12 per term
+        plan = course_scheduler(self.course_dict, [('CS', '3250')], [])
+        total_credits = 0
+        self.assertTrue(total_credits >= 12)
 
     def test_initial_state(self):
         # testing the scheduler when the student has intial credit
@@ -67,14 +78,29 @@ class TestCourseScheduler(unittest.TestCase):
         plan = course_scheduler(self.course_dict, [], [])
         self.assertEqual(plan, ())
 
-    def test_goal_satisfied(self):
-        # testing the scheduler when the provided goal has already been satisfied
-        plan = course_scheduler(self.course_dict, [], [])
-        self.assertEqual(plan, ())
+def split_by_term(plan):
+    """
+    a function that is helpful for many tests
+    given a plan, returns a dictionary of scheduled courses organized by year and term
+    """
+    scheduled_by_term = {'Frosh': {'Fall': {'courses': [], 'credits': 0},'Spring': {'courses': [], 'credits': 0}},
+                         'Soph': {'Fall': {'courses': [], 'credits': 0}, 'Spring': {'courses': [], 'credits': 0}},
+                         'Junior': {'Fall': {'courses': [], 'credits': 0}, 'Spring': {'courses': [], 'credits': 0}},
+                         'Senior': {'Fall': {'courses': [], 'credits': 0}, 'Spring': {'courses': [], 'credits': 0}}}
+
+    for scheduled in plan:
+        year = scheduled[1][0]
+        term = scheduled[1][1]
+        course = scheduled[0]
+        credit = scheduled[2]
+        scheduled_by_term[year][term]['courses'].append(course)
+        scheduled_by_term[year][term]['hours'] += credit
+
+    return scheduled_by_term
 
 def add_span_major():
     """
-
+    returns the course dictionary with the spanish major added
     """
     span_dict = course_dictionary.create_course_dict()
     Course = namedtuple('Course', 'program, designation')
