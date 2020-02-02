@@ -22,6 +22,10 @@ class Semester:
         self.courses.remove(course)
         self.hours -= hours
 
+    def clear(self):
+        self.courses = []
+        self.hours = 0
+
     def __str__(self):
         return '******************************************************\n' \
                + str(self.date) + '\n' \
@@ -65,3 +69,21 @@ class Schedule:
         for sem in self.schedule:
             string += str(sem)
         return string
+
+    def clear(self):
+        for sem in self.schedule:
+            sem.clear()
+
+    def planner(self, semesterlist):
+        '''
+        List of list of classes that need to be added, each internal list representing a semester
+        Strategy is to add classes as early as possible and push them back only when necessary
+        Assumes that class prereqs have already been determined
+        '''
+        current_sem = 0
+        for semester in semesterlist:
+            for course in semester:
+                self.add_course(course, current_sem)
+            current_sem += 1
+
+
