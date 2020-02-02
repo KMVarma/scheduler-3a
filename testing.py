@@ -48,15 +48,29 @@ class TestCourseScheduler(unittest.TestCase):
         plan = course_scheduler(self.course_dict, [], [])
         self.assertEqual(plan, ())
 
-    def test_cs_major(self):
-        # testing the scheduler when only the cs major is the goal and the student has no initial credit
-        plan = course_scheduler(self.course_dict, [], [])
+    def test_proper_credits(self):
+        # ensuring proper number of credits every term
+        plan = course_scheduler(self.course_dict, [('CS', 'major')], [])
         split_plan = split_by_term(plan)
         for year in split_plan:
-            for term in split_plan:
+            for term in year:
                 credit = split_plan[year][term]['credits']
-                # ensuring proper number of credits every term
                 self.assertTrue(12 <= credit <= 18)
+
+    def test_proper_terms(self):
+        # ensuring the correct years and terms are included
+        # this goal should result in a 3-semester plan
+        plan = course_scheduler(self.course_dict, [('MATH', '4110')], [])
+        split_plan = split_by_term(plan)
+        years = list(split_plan.keys())
+        self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
+        self.assertNotEqual(split_plan['Frosh']['Spring']['courses'], [])
+        self.assertNotEqual(split_plan['Soph']['Fall']['courses'], [])
+        self.assertEqual(split_plan['Soph']['Spring']['courses'], [])
+        self.assertEqual(split_plan['Junior']['Fall']['courses'], [])
+        self.assertEqual(split_plan['Junior']['Spring']['courses'], [])
+        self.assertEqual(split_plan['Senior']['Fall']['courses'], [])
+        self.assertEqual(split_plan['Senior']['Spring']['courses'], [])
 
     def test_goal_satisfied(self):
         # testing the scheduler when the provided goal has already been satisfied
@@ -70,13 +84,31 @@ class TestCourseScheduler(unittest.TestCase):
         self.assertTrue(total_credits >= 12)
 
     def test_initial_state(self):
-        # testing the scheduler when the student has intial credit
-        plan = course_scheduler(self.course_dict, [], [])
-        self.assertEqual(plan, ())
+        plan = course_scheduler(self.course_dict, [('SPAN', '1102')], [('SPAN', '1101')])
+        # the prereq for SPAN1102 is already satisfied so neither of its prereqs should be in the plan
+        for course in plan:
+            self.assertNotEqual(course[0], ('SPAN', '1101'))
+            self.assertNotEqual(course[0], ('SPAN', '1100'))
 
-    def test_spanish_major(self):
-        plan = course_scheduler(self.course_dict, [], [])
-        self.assertEqual(plan, ())
+    def test_simple_plan(self):
+        # in this case, there is no ambiguity in the optimal terms to schedule the goal and its prereqs in
+        plan = course_scheduler(self.course_dict, [('MATH', '2410')], [])
+        split_plan = split_by_term(plan)
+        self.assertTrue(('MATH', '1200') in split_plan['Frosh']['Fall']['courses']
+                        or ('MATH', '1300') in split_plan['Frosh']['Fall']['courses'])
+        if ('MATH', '1200') in split_plan['Frosh']['Fall']['courses']:
+            self.assertTrue(('MATH', '1201') in split_plan['Frosh']['Spring']['courses'])
+            self.assertTrue(('MATH', '2200') in split_plan['Soph']['Fall']['courses'])
+            self.assertTrue(('MATH', '2300') in split_plan['Soph']['Spring']['courses'])
+            self.assertTrue(('MATH', '2410') in split_plan['Junior']['Fall']['courses'])
+        if ('MATH', '1300') in split_plan['Frosh']['Fall']['courses']:
+            self.assertTrue(('MATH', '1301') in split_plan['Frosh']['Spring']['courses'])
+            self.assertTrue(('MATH', '2300') in split_plan['Soph']['Fall']['courses'])
+            self.assertTrue(('MATH', '2410') in split_plan['Soph']['Spring']['courses'])
+
+    def test_cs_major(self):
+        # ensuring that all major requirements are satisfied
+        plan = course_scheduler(self.course_dict, [('CS', 'major')],[])
 
 def split_by_term(plan):
     """
