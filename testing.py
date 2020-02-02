@@ -1,4 +1,3 @@
-import sys
 import readcsv as course_dictionary
 from scheduler import course_scheduler
 from collections import namedtuple
@@ -56,6 +55,18 @@ class TestCourseScheduler(unittest.TestCase):
             for term in year:
                 credit = split_plan[year][term]['credits']
                 self.assertTrue(12 <= credit <= 18)
+        # goal of only 4 courses, but cannot all fit in one term since they're all 5-credit
+        plan2 = course_scheduler(self.course_dict,
+                                 [('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
+        split_plan = split_by_term(plan2)
+        self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
+        self.assertNotEqual(split_plan['Frosh']['Spring']['courses'], [])
+        self.assertEqual(split_plan['Soph']['Fall']['courses'], [])
+        self.assertEqual(split_plan['Soph']['Spring']['courses'], [])
+        self.assertEqual(split_plan['Junior']['Fall']['courses'], [])
+        self.assertEqual(split_plan['Junior']['Spring']['courses'], [])
+        self.assertEqual(split_plan['Senior']['Fall']['courses'], [])
+        self.assertEqual(split_plan['Senior']['Spring']['courses'], [])
 
     def test_proper_terms(self):
         # ensuring the correct years and terms are included
@@ -84,11 +95,12 @@ class TestCourseScheduler(unittest.TestCase):
         self.assertTrue(total_credits >= 12)
 
     def test_initial_state(self):
-        plan = course_scheduler(self.course_dict, [('SPAN', '1102')], [('SPAN', '1101')])
+        plan = course_scheduler(self.course_dict, [('CS', '1101'), ('SPAN', '1102')], [('SPAN', '1101')])
         # the prereq for SPAN1102 is already satisfied so neither of its prereqs should be in the plan
         for course in plan:
             self.assertNotEqual(course[0], ('SPAN', '1101'))
             self.assertNotEqual(course[0], ('SPAN', '1100'))
+        self.assertTrue((('SPAN', '1102'), ('Fall', 'Frosh'), 5))
 
     def test_simple_plan(self):
         # in this case, there is no ambiguity in the optimal terms to schedule the goal and its prereqs in
@@ -107,8 +119,22 @@ class TestCourseScheduler(unittest.TestCase):
             self.assertTrue(('MATH', '2410') in split_plan['Soph']['Spring']['courses'])
 
     def test_cs_major(self):
-        # ensuring that all major requirements are satisfied
-        plan = course_scheduler(self.course_dict, [('CS', 'major')],[])
+        # can lead to different specific plans depending on implementation
+        plan = course_scheduler(self.course_dict, [('CS', 'major')], [])
+        # ensure that all scheduled courses are actual courses (ie. are not higher level requirements or empty)
+        # and are offered during the semester they are scheduled
+        split_plan = split_by_term(plan)
+        Course = namedtuple('Course', 'program, designation')
+        for year in split_plan:
+            for term in year:
+                for course in term['courses']:
+                    key = Course(course[0], course[1])
+                    terms = self.course_dict[key].terms
+                    self.assertTrue(term in terms)
+                    self.assertNotEqual(self.course_dict[key].credits, 0)
+
+    def test_spanish_major(self):
+        plan = course_scheduler(self.span_dict, [('SPAN', 'major')], [])
 
 def split_by_term(plan):
     """
@@ -121,12 +147,12 @@ def split_by_term(plan):
                          'Senior': {'Fall': {'courses': [], 'credits': 0}, 'Spring': {'courses': [], 'credits': 0}}}
 
     for scheduled in plan:
-        year = scheduled[1][0]
-        term = scheduled[1][1]
+        year = scheduled[1][1]
+        term = scheduled[1][0]
         course = scheduled[0]
         credit = scheduled[2]
         scheduled_by_term[year][term]['courses'].append(course)
-        scheduled_by_term[year][term]['hours'] += credit
+        scheduled_by_term[year][term]['credits'] += credit
 
     return scheduled_by_term
 
