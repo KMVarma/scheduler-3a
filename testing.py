@@ -128,7 +128,41 @@ class TestCourseScheduler(unittest.TestCase):
         self.assertEqual(split_plan['Senior']['Spring']['courses'], [])
 
     def test_spanish_major(self):
+        # thoroughly testing the spanish major plan because according to the catalog and project spec it is very simple
         plan = course_scheduler(self.span_dict, [('SPAN', 'major')], [])
+        split_plan = split_by_term(plan)
+        # ensure proper number of credits each semester
+        for year in split_plan:
+            for term in year:
+                self.assertTrue(12 <= term['credits'] <= 18)
+        # check that all core requirements are satisfied
+        self.assertTrue((('SPAN', '3301W'), ('Fall', 'Frosh'), 3) in plan)
+        self.assertTrue((('SPAN', '3302'), ('Spring', 'Frosh'), 3) in plan)
+        self.assertTrue((('SPAN', '3303'), ('Fall', 'Soph'), 3) in plan)
+        Course = namedtuple('Course', 'program, designation')
+        literature_req = self.span_dict[Course('SPAN', 'literature1')].prereqs
+        literature_count = 3
+        lingusitc_req = self.span_dict[Course('SPAN', 'linguistic')].prereqs
+        lingusitc_count = 1
+        electives_req = self.span_dict[Course('SPAN', 'electives1')].prereqs
+        electives_count = 3
+        courses = []
+        for scheduled in plan:
+            course = scheduled[0]
+            courses.append(course)
+            full_name = course[0] + course[1]
+            if full_name in literature_req:
+                literature_count -= 1
+            if full_name in lingusitc_req:
+                electives_count -= 1
+            if full_name in electives_req:
+                electives_count -= 1
+        # check that all non-core requirements are satisfied
+        self.assertTrue(literature_count <= 0)
+        self.assertTrue(lingusitc_count <= 0)
+        self.assertTrue(electives_count <= 0)
+        # check that there are no duplicates
+        self.assertNotEqual(len(courses), len(set(courses)))
 
 def split_by_term(plan):
     """
