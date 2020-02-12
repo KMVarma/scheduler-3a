@@ -21,7 +21,7 @@ def course_scheduler (course_descriptions, goal_conditions, initial_state):
         classes_taken.add(course)
     schedule = []
     plan = satisfy_goals(goal_conditions, classes_taken, schedule)
-    print(plan)
+    # print(plan)
     return plan
 
 def satisfy_goals(goal_conditions, taken, schedule):
@@ -44,6 +44,7 @@ def satisfy_goals(goal_conditions, taken, schedule):
         # keeping track of the prereqs that were required (in prereqs) and the prereqs that are actually needed
         # (in classes_to_satisfy)
         prereqs = get_prereqs(goal)
+        #prereqs2 =prereqs
         classes_to_satisfy = []
         for option in prereqs:
             classes_to_satisfy.append([x for x in option if x not in taken])
@@ -64,14 +65,16 @@ def satisfy_goals(goal_conditions, taken, schedule):
                     option = []
                     # if [] is in classes_to_satisfy, then one of the prereq options has already been satisfied and any
                     # other option can be ignored
-                    if not [] in classes_to_satisfy:
+                    if [] not in classes_to_satisfy:
                         option = classes_to_satisfy[i]  # try the ith prereqs option
-                    if satisfy_goals(option, taken, schedule):
+                    temp = satisfy_goals(option, taken, schedule)
+                    if temp:
                         info = get_course_info(goal)
                         if info.credits != '0':
                             taken.add(goal)
-                            schedule.append((goal, prereqs[i]))
+                            schedule.append((goal, prereqs))
                         if goal_conditions:
+
                             goal_conditions.pop(0)
                         unsatisfied = False
                     else:
@@ -100,6 +103,7 @@ def get_prereqs(course):
     for potential_courses in course_info.prereqs:
         needed_courses = [course for course in potential_courses]
         prereqs.append(needed_courses)
+    # print('the prereqs of {} are {}'.format(course, prereqs))
     return prereqs
 
 # Helper function for get_prereqs
@@ -112,7 +116,8 @@ def get_course_info(target_course):
     return 'ERROR'
 
 
-courselist = course_scheduler(course_dict, [('CS', 'calculus')], [])
+courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [])
+print(courselist)
 schedule = planner.Schedule(course_dict)
 schedule.planner(courselist)
 print(schedule)

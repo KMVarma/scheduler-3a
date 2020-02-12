@@ -1,5 +1,3 @@
-
-
 class Semester:
     def __init__(self, semester, year):
         self.courses = []
@@ -112,8 +110,8 @@ class Schedule:
 
     def planner(self, semesterlist):
         for name, prereqs in reversed(semesterlist):
-            course = Course(name, prereqs, self.find_hours(name))
-            print(course)
+            course = Course(name, sum(prereqs, []), self.find_hours(name))
+            # print(course)
             self.add_course(course, 0)
 
     def is_good(self):
