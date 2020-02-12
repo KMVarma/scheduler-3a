@@ -7,6 +7,14 @@ course_dict = readcsv.create_course_dict()
 
 
 def course_scheduler (course_descriptions, goal_conditions, initial_state):
+    """
+    returns a list of courses (with their respective prereqs) that need to be satisfied to satisfy the goal conditions
+
+    :param course_descriptions: course dictionary
+    :param goal_conditions: goals that need to be satisfied
+    :param initial_state: courses that have already been taken
+    :return: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...] that need to be scheduled
+    """
     # any prior credits are added to classes taken
     classes_taken = set()
     for course in initial_state:
@@ -17,20 +25,30 @@ def course_scheduler (course_descriptions, goal_conditions, initial_state):
     return plan
 
 def satisfy_goals(goal_conditions, taken, schedule):
+    """
+    satisfies goal conditions by recursively breaking each goal into prereqs
 
+    :param goal_conditions: goals that need to be satisfied
+    :param taken: courses that have already been taken
+    :param schedule: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...]
+    that need to be scheduled
+    :return: a schedule
+    """
     if not goal_conditions:    # base case, no goals left to satisfy
         return schedule
 
     while goal_conditions:
         # iteratively satisfy all goal conditions
         goal = goal_conditions[0]
-        prereqs = get_prereqs(goal)
 
+        # keeping track of the prereqs that were required (in prereqs) and the prereqs that are actually needed
+        # (in classes_to_satisfy)
+        prereqs = get_prereqs(goal)
         classes_to_satisfy = []
         for option in prereqs:
             classes_to_satisfy.append([x for x in option if x not in taken])
 
-        if not classes_to_satisfy:  # no prereqs
+        if not classes_to_satisfy:  # no prereqs needed
             info = get_course_info(goal)
             if info.credits != '0':    # if credits is '0', it's a high-level requirement (not an actual course)
                 taken.add(goal)
@@ -44,11 +62,10 @@ def satisfy_goals(goal_conditions, taken, schedule):
             while unsatisfied:
                 if noptions > i:
                     option = []
-                    # if [] is in classes_to_satisfy, then the prereqs have already been satisfied and any other option
-                    # can be ignored
-                    # todo: maybe figure out a way to pick the easiest option first rather than the first option?
+                    # if [] is in classes_to_satisfy, then one of the prereq options has already been satisfied and any
+                    # other option can be ignored
                     if not [] in classes_to_satisfy:
-                        option = classes_to_satisfy[i]
+                        option = classes_to_satisfy[i]  # try the ith prereqs option
                     if satisfy_goals(option, taken, schedule):
                         info = get_course_info(goal)
                         if info.credits != '0':
@@ -61,7 +78,7 @@ def satisfy_goals(goal_conditions, taken, schedule):
                         # the option could not be satisfied
                         i += 1
                 else:
-                    # no option left to satisfy the goal's prereqs
+                    # no prereq option left to try
                     return ()
     return schedule
 
@@ -80,14 +97,13 @@ def get_prereqs(course):
     course_info = get_course_info(course)
     if not course_info:
       return prereqs
-    # check if have already taken\n",
     for potential_courses in course_info.prereqs:
         needed_courses = [course for course in potential_courses]
         prereqs.append(needed_courses)
     return prereqs
 
-# Helper function for get_prereqs\n",
-# Given a readcsv.Course returns its corresponding readcsv.CourseInfo\n",
+# Helper function for get_prereqs
+# Given a readcsv.Course returns its corresponding readcsv.CourseInfo
 def get_course_info(target_course):
     for course, course_info in course_dict.items():
         if target_course[0] == course.program and target_course[1] == course.designation:
