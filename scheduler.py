@@ -112,4 +112,8 @@ def get_course_info(target_course):
     return 'ERROR'
 
 
-course_scheduler(course_dict, [('CS', 'calculus')], [])
+courselist = course_scheduler(course_dict, [('CS', 'calculus')], [])
+schedule = planner.Schedule(course_dict)
+schedule.planner(courselist)
+print(schedule)
+pass
