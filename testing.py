@@ -128,7 +128,7 @@ class TestCourseScheduler(unittest.TestCase):
         self.assertEqual(split_plan['Senior']['Spring']['courses'], [])
 
     def test_spanish_major(self):
-        # thoroughly testing the spanish major plan because according to the catalog and project spec it is very simple
+        # more thoroughly testing the spanish major plan (according to the catalog and project spec it is very simple)
         plan = course_scheduler(self.span_dict, [('SPAN', 'major')], [])
         split_plan = split_by_term(plan)
         # ensure proper number of credits each semester

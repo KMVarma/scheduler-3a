@@ -43,6 +43,17 @@ class Schedule:
                          Semester('Spring', 'Junior'),
                          Semester('Fall', 'Senior'),
                          Semester('Spring', 'Senior')]
+        """
+        self.schedule = [Semester('Spring', 'Senior'),
+                         Semester('Fall', 'Senior'),
+                         Semester('Spring', 'Junior'),
+                         Semester('Fall', 'Junior'),
+                         Semester('Spring', 'Soph'),
+                         Semester('Fall', 'Soph'),
+                         Semester('Spring', 'Frosh'),
+                         Semester('Fall', 'Frosh'),
+                         ]
+        """
         self.course_dict = course_dict
 
     def add_course(self, course, semester):

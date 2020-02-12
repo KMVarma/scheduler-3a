@@ -1,111 +1,102 @@
 import readcsv
 import planner
+import pdb
 
 # Creates course dict and prints first 5 entries
 course_dict = readcsv.create_course_dict()
-readcsv.print_dict(course_dict, 5)
+
 
 def course_scheduler (course_descriptions, goal_conditions, initial_state):
-    my_schedule = planner.Schedule(course_dict)
-    # any prior credits are added to courses taken
+    # any prior credits are added to classes taken
     classes_taken = set()
     for course in initial_state:
         classes_taken.add(course)
-    
-    sem = 0
-    # checks whether goal conditions are already met
-    if goal_conditions == () or goal_conditions == initial_state:
-        return ()
+    schedule = []
+    prereqs = set()
+    plan = satisfy_goals(goal_conditions, classes_taken, schedule, prereqs)
+    print(plan)
+    return plan
 
-    # iteratively satisfies each goal 
-    for goal in goal_conditions:
-        goal_reqs = get_prereqs(goal, classes_taken)
-        if goal_reqs:
-           sem = explore_course(goal_reqs, classes_taken, my_schedule, sem)
+def satisfy_goals(goal_conditions, taken, schedule, prereqs):
 
-        
-        classes_taken.add(goal)
-        my_schedule.add_course(goal, sem)
-    
-    
-    #   some checks for failure/success somewhere 
+    if not goal_conditions:    # base case, no goals left to satisfy
+        return schedule
 
-    # test to ensure each semester is between 12 and 18 hours
-    print(my_schedule)
-    return ()
+    while goal_conditions:
+        # iteratively satisfy all goal conditions
+        goal = goal_conditions[0]
+        classes_to_satisfy = get_prereqs(goal, taken)
 
-def validity_check(course, prereqs, taken_classes, schedule, sem):
+        if not classes_to_satisfy:  # no prereqs
+            info1 = get_course_info(goal)
+            if info1.credits != '0':    # if credits is '0', it's a high-level requirement (not an actual course)
+                taken.add(goal)
+                schedule.append((goal, prereqs))
+                print('added')
+            goal_conditions.pop(0)
 
-    # check to make sure that courses are not scheduled at the same time as their prereqs
-    if ((prereqs == [] or prereqs == [[]]) and schedule.schedule[sem].hours <= 18 and course not in taken_classes ):
-        # move to next course
-        return True
-    else:
-        # if there are more prereqs for this course add them to the list of courses to take and push this course up a semester
-        return False
+        else:   # there are prereqs
+            unsatisfied = True
+            while unsatisfied:
+                if classes_to_satisfy:
+                    option = []
+                    # if [] is in classes_to_satisfy, then the prereqs have already been satisfied and any other option
+                    # can be ignored
+                    # todo: maybe figure out a way to pick the easiest option first rather than the first option?
+                    if not [] in classes_to_satisfy:
+                        option = classes_to_satisfy[0]
+                        for option1 in option:
+                            prereqs.add(option1)
+                    if satisfy_goals(option, taken, schedule, set()):
+                        info1 = get_course_info(goal)
+                        if info1.credits != '0':
+                            taken.add(goal)
+                            schedule.append((goal, prereqs))
+                        goal_conditions.pop(0)
+                        unsatisfied = False
+                    else:
+                        # the option could not be satisfied
+                        classes_to_satisfy.remove(option)
+                        for option1 in option:
+                            prereqs.remove(option1)
+                else:
+                    # no option left to satisfy the goal's prereqs
+                    return ()
+    return schedule
 
+# Given a course returns all possible ways to satisfy the requirements.
+# params:
+#    course - readcsv.Course object, course name (key in course_dict)
+#    taken_classes - set of readcsv.Course objects of classes that have already been taken
+# returns:
+#    list of lists, each list has readcsv.Course objects of classes to fufill the requirement
+#    ie. CSliberalhum would return [[('HIST', '2700'), ('ENGL', '3896')], [('ENGL', '1250W'), ('EUS', '2203')]]
+#    since the liberal humanities req can be satisfied by either two class set.
+def get_prereqs(course, taken_classes):
+  prereqs = []
+  #print('Course to get prereq for: ', course)
+  course_info = get_course_info(course)
+  #print('Get course info returns: ', course_info)
+  if not course_info:
+    return prereqs
+  # check if have already taken
+  for potential_courses in course_info.prereqs:
+    needed_courses = [ course for course in potential_courses if course not in taken_classes ]
+    prereqs.append(needed_courses)
 
-#  Given a list of lists performs a depth first search on all the elements of the inner list
-#  params:
-#     prereqs- a lists of lists containing satisfying prereqs for a course
-#     taken_classes- a set of classes that have been taken
-#     schedule- a schedule object
-#     sem- an integer corresponding to the prospective semester a course will be taken (from 0-7 inclusive)
-#
-#  returns
-#
-def explore_course(prereqs, taken_classes, schedule, sem):
-    new_sem = 0
-    # if you get to the end of this list you've completed one of the goal conditions/satisfying prereq lists for a goal/course
-    for outer in prereqs:
-        for course in outer:
-            if course not in taken_classes:
-                schedule.add_course(course, sem)
-                new_prereqs = get_prereqs(course, taken_classes)
-                
-                
-                if not validity_check(course, new_prereqs, taken_classes, schedule, sem):
-                    
-                    new_sem += 1
-                    schedule.move_course(course, sem, new_sem)
-                    new_sem += explore_course(new_prereqs, taken_classes, schedule, 0)
-                taken_classes.add(course)
+  return prereqs
 
+# Helper function for get_prereqs
+# Given a readcsv.Course returns its corresponding readcsv.CourseInfo
+def get_course_info(target_course):
+  for course, course_info in course_dict.items():
+    if target_course[0] == course.program and target_course[1] == course.designation:
+      return course_info
+  raise ValueError('Course: {} not found in course catalog'.format(target_course))
+  return 'ERROR'
 
-    return new_sem
+def print_schedule(schedule):
+    for sem in schedule.schedule:
+        print(sem.date, sem.courses)
 
-
-# fetch semester of completion for prelims to learn when to schedule a course
-# 
-def properly_place_course(course, schedule):
-    course_info = get_course_info(course)
-    prereqs = course_info.prereqs
-    sem = 0
-    if prereqs:
-        for sem_number in schedule.schedule:
-            for p in prereqs:
-                #check if p is in the schedule
-                if p in sem_number:
-                    #move on
-            sem += 1
-    return sem
-    return ()
-
-schedule = planner.Schedule(course_dict)
-
-# schedule.find_hours(('CS', '1101'))
-schedule.add_course(('CS', '3251'), 3)
-schedule.add_course(('CS', '4269'), 4)
-schedule.add_course(('CS', '1101'), 1)
-schedule.remove_course(('CS', '1101'), 1)
-schedule.move_course(('CS', '4269'), 4, 7)
-schedule.clear()
-schedule.planner([[('CS', '1101')],
-                  [('CS', '2201'), ('EECE', '2116')],
-                  [('CS', '3251'), ('CS', '3250')],
-                  [('CS', '3281'), ('CS', '3270')],
-                  [('CS', '3891'), ('CS', '3891'), ('CS', '4288')],
-                  [('CS', '3860')],
-                  [('CS', '4260'), ('CS', '3861')],
-                  [('CS', '4269')]])
-print(schedule)
+course_scheduler(course_dict, [('CS', 'calculus')], [])
