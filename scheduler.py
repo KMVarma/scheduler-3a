@@ -21,11 +21,11 @@ def course_scheduler (course_descriptions, goal_conditions, initial_state, cours
     for course in initial_state:
         classes_taken.add(course)
     schedule = []
-    plan = satisfy_goals(goal_conditions, classes_taken, schedule)
+    plan = satisfy_goals(goal_conditions, classes_taken, schedule, course_macros)
     # print(plan)
     return plan
 
-def satisfy_goals(goal_conditions, taken, schedule):
+def satisfy_goals(goal_conditions, taken, schedule, course_macros):
     """
     satisfies goal conditions by recursively breaking each goal into prereqs
 
@@ -33,6 +33,7 @@ def satisfy_goals(goal_conditions, taken, schedule):
     :param taken: courses that have already been taken
     :param schedule: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...]
     that need to be scheduled
+    :param course_macros: dictionary of high-level requirements and sequence of classes to satisfy
     :return: a schedule
     """
     if not goal_conditions:    # base case, no goals left to satisfy
@@ -41,6 +42,14 @@ def satisfy_goals(goal_conditions, taken, schedule):
     while goal_conditions:
         # iteratively satisfy all goal conditions
         goal = goal_conditions[0]
+
+        # if goal is in macros use precomputed courses
+        for macro, prereqs in course_macros.items():
+            if macro == goal:
+                for course in prereqs:
+                    taken.add(course[0])
+                    schedule.append(course)
+                return schedule
 
         # keeping track of the prereqs that were required (in prereqs) and the prereqs that are actually needed
         # (in classes_to_satisfy)
@@ -68,8 +77,7 @@ def satisfy_goals(goal_conditions, taken, schedule):
                     # other option can be ignored
                     if [] not in classes_to_satisfy:
                         option = classes_to_satisfy[i]  # try the ith prereqs option
-                    temp = satisfy_goals(option, taken, schedule)
-                    if temp:
+                    if satisfy_goals(option, taken, schedule, course_macros):
                         info = get_course_info(goal)
                         if info.credits != '0':
                             taken.add(goal)
@@ -116,6 +124,7 @@ def get_course_info(target_course):
     raise ValueError('Course: {} not found in course catalog'.format(target_course))
     return 'ERROR'
 
+# Given a high level goal creates a dict of immediate subgoals and a way to satisfy them
 def create_macros(course_descriptions, goal_condition):
     goals = get_prereqs(goal_condition)[0]
     macros_dict = {}
@@ -125,9 +134,18 @@ def create_macros(course_descriptions, goal_condition):
     return macros_dict
 
 macros_dict = create_macros(course_dict, ('CS', 'major'))
+print("macros dict:")
+for key, value in macros_dict.items():
+    print("goal: {}\n\tschedule: {}".format(key, value))
 
+print('Course list with Macros')
 courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [], macros_dict)
 print(courselist)
+
+print('Course list without Macros')
+courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [], {})
+print(courselist)
+
 schedule = planner.Schedule(course_dict)
 schedule.planner(courselist)
 print(schedule)
