@@ -6,13 +6,14 @@ import pdb
 course_dict = readcsv.create_course_dict()
 
 
-def course_scheduler (course_descriptions, goal_conditions, initial_state):
+def course_scheduler (course_descriptions, goal_conditions, initial_state, course_macros):
     """
     returns a list of courses (with their respective prereqs) that need to be satisfied to satisfy the goal conditions
 
     :param course_descriptions: course dictionary
     :param goal_conditions: goals that need to be satisfied
     :param initial_state: courses that have already been taken
+    :param course_macros: dictionary of high-level requirements and sequence of classes to satisfy
     :return: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...] that need to be scheduled
     """
     # any prior credits are added to classes taken
@@ -115,8 +116,17 @@ def get_course_info(target_course):
     raise ValueError('Course: {} not found in course catalog'.format(target_course))
     return 'ERROR'
 
+def create_macros(course_descriptions, goal_condition):
+    goals = get_prereqs(goal_condition)[0]
+    macros_dict = {}
+    for goal in goals:
+        macros_dict[goal] = course_scheduler(course_descriptions, [goal], [], {})
 
-courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [])
+    return macros_dict
+
+macros_dict = create_macros(course_dict, ('CS', 'major'))
+
+courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [], macros_dict)
 print(courselist)
 schedule = planner.Schedule(course_dict)
 schedule.planner(courselist)
