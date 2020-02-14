@@ -43,13 +43,18 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
         # iteratively satisfy all goal conditions
         goal = goal_conditions[0]
 
+        using_macro = False
         # if goal is in macros use precomputed courses
         for macro, prereqs in course_macros.items():
             if macro == goal:
+                using_macro = True
                 for course in prereqs:
-                    taken.add(course[0])
-                    schedule.append(course)
-                return schedule
+                    if course[0] not in taken:
+                        taken.add(course[0])
+                        schedule.append(course)
+                goal_conditions.pop(0)
+        if using_macro:
+            continue
 
         # keeping track of the prereqs that were required (in prereqs) and the prereqs that are actually needed
         # (in classes_to_satisfy)
@@ -112,7 +117,6 @@ def get_prereqs(course):
     for potential_courses in course_info.prereqs:
         needed_courses = [course for course in potential_courses]
         prereqs.append(needed_courses)
-    # print('the prereqs of {} are {}'.format(course, prereqs))
     return prereqs
 
 # Helper function for get_prereqs
@@ -134,17 +138,14 @@ def create_macros(course_descriptions, goal_condition):
     return macros_dict
 
 macros_dict = create_macros(course_dict, ('CS', 'major'))
-print("macros dict:")
-for key, value in macros_dict.items():
-    print("goal: {}\n\tschedule: {}".format(key, value))
 
 print('Course list with Macros')
-courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [], macros_dict)
+courselist = course_scheduler(course_dict, [('CS', 'major')], [], macros_dict)
 print(courselist)
 
-print('Course list without Macros')
-courselist = course_scheduler(course_dict, [('CS', 'mathematics')], [], {})
-print(courselist)
+# print('Course list without Macros')
+# courselist = course_scheduler(course_dict, [('CS', 'major')], [], {})
+# print(courselist)
 
 schedule = planner.Schedule(course_dict)
 schedule.planner(courselist)
