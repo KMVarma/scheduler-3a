@@ -1,6 +1,7 @@
 import readcsv
 import planner
 import pdb
+import time
 
 # Creates course dict and prints first 5 entries
 course_dict = readcsv.create_course_dict()
@@ -140,8 +141,11 @@ def create_macros(course_descriptions, goal_condition):
 macros_dict = create_macros(course_dict, ('CS', 'major'))
 
 print('Course list with Macros')
+
+start_time = time.clock()
 courselist = course_scheduler(course_dict, [('CS', 'major')], [], macros_dict)
-print(courselist)
+duration = time.clock()-start_time
+#print(courselist)
 
 # print('Course list without Macros')
 # courselist = course_scheduler(course_dict, [('CS', 'major')], [], {})
@@ -150,4 +154,5 @@ print(courselist)
 schedule = planner.Schedule(course_dict)
 schedule.planner(courselist)
 print(schedule)
+print("Schedule found in ", duration, " seconds.")
 pass
