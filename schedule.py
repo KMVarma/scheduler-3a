@@ -1,38 +1,10 @@
-class Semester:
-    def __init__(self, semester, year):
-        self.courses = []
-        self.date = (semester, year)
-        self.hours = 0
-
-    def add(self, course):
-        '''
-        course: course to add
-        hours: int hours that course is worth
-        '''
-        self.courses += [course]
-        self.hours += course.hours
-
-    def remove(self, course):
-        '''
-        course: course to remove
-        hours: int hours that course is worth
-        '''
-        self.courses.remove(course)
-        self.hours -= course.hours
-
-    def clear(self):
-        self.courses = []
-        self.hours = 0
-
-    def __str__(self):
-        return '******************************************************\n' \
-               + str(self.date) + '\n' \
-               + 'Courses' + str(self.courses) + '\n' \
-               + 'Hours: ' + str(self.hours) + '\n'
+from utils import get_course_info
+from semester import Semester
+from course import Course
 
 
 class Schedule:
-    def __init__(self, course_dict):
+    def __init__(self):
         self.schedule = [Semester('Fall', 'Frosh'),
                          Semester('Spring', 'Frosh'),
                          Semester('Fall', 'Soph'),
@@ -41,18 +13,6 @@ class Schedule:
                          Semester('Spring', 'Junior'),
                          Semester('Fall', 'Senior'),
                          Semester('Spring', 'Senior')]
-        """
-        self.schedule = [Semester('Spring', 'Senior'),
-                         Semester('Fall', 'Senior'),
-                         Semester('Spring', 'Junior'),
-                         Semester('Fall', 'Junior'),
-                         Semester('Spring', 'Soph'),
-                         Semester('Fall', 'Soph'),
-                         Semester('Spring', 'Frosh'),
-                         Semester('Fall', 'Frosh'),
-                         ]
-        """
-        self.course_dict = course_dict
         self.MAX_HOURS = 18
         self.MIN_HOURS = 12
 
@@ -95,9 +55,6 @@ class Schedule:
         '''
         self.schedule[semester].remove(course)
 
-    def find_hours(self, course):
-        return int(self.course_dict[course].credits)
-
     def __str__(self):
         string = ''
         for sem in self.schedule:
@@ -110,8 +67,8 @@ class Schedule:
 
     def planner(self, semesterlist):
         for name, prereqs in reversed(semesterlist):
-            course = Course(name, sum(prereqs, []), self.find_hours(name))
-            # print(course)
+            info = get_course_info(name)
+            course = Course(name, sum(prereqs, []), info.terms, int(info.credits))
             self.add_course(course, 0)
 
     def is_good(self):
@@ -123,15 +80,8 @@ class Schedule:
                 return False
         return True
 
-
-class Course:
-    def __init__(self, name, prereqs, hours):
-        self.name = name
-        self.prereqs = prereqs
-        self.hours = hours
-
-    def __str__(self):
-        return str(self.name)
-
-    def __repr__(self):
-        return self.__str__()
+    def total_hours(self):
+        sum = 0
+        for semester in self.schedule:
+            sum += semester.hours
+        return sum
