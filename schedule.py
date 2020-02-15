@@ -51,10 +51,11 @@ class Schedule:
                 return False
 
             #choose a random course (last one since it most likely has the least dependencies)
-            course_to_move = targetsem.courses[-1]
+            course_to_move = targetsem.courses[1]
             targetsem.remove(course_to_move)
             self.add_course(course_to_move, semester_idx + 1)
         self.schedule[semester_idx].add(course)
+        return True
 
     def remove_course(self, course, semester):
         '''
@@ -75,7 +76,9 @@ class Schedule:
 
     def planner(self, course_list):
         for course in reversed(course_list):
-            self.add_course(course, 0)
+            result = self.add_course(course, 0)
+            if not result:
+                return False
         return True
 
     def is_good(self):

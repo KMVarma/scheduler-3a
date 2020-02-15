@@ -32,7 +32,7 @@ def course_scheduler (goal_conditions, initial_state):
         classes_taken.append(course_dict[init])
     schedule = []
     course_macros = create_macros(goal_conditions)
-    goal_name = Course(('Main', 'Main'), [], [], 0)
+    goal_name = course_dict['CS', 'major']
 
     courselist = satisfy_goals(goals, classes_taken, schedule, course_macros, goal_name)
 
@@ -99,7 +99,7 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name):
             planner = Schedule()
             result = planner.planner(schedule)
 
-            if not planner:
+            if not result:
                 return False
             if goal.hours != 0 and goal not in taken:    # if credits is '0', it's a high-level requirement (not an actual course)
                 # Create course to be added
