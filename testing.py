@@ -1,8 +1,11 @@
 import readcsv as course_dictionary
 from scheduler import course_scheduler
 from collections import namedtuple
-from schedule import Schedule
 import unittest
+import re
+from collections import namedtuple
+from openpyxl import load_workbook
+import warnings
 
 class TestCourseScheduler(unittest.TestCase):
 
@@ -41,17 +44,17 @@ class TestCourseScheduler(unittest.TestCase):
         # there are 100 total ECON and EDUC courses, so it is impossible to take all in 4 years
         all_econ_educ = [(key.program, key.designation) for key in self.course_dict
                          if (key.program == 'ECON' or key.program == 'EDUC')]
-        plan = course_scheduler(all_econ_educ, [])
+        plan = course_scheduler(self.course_dict, all_econ_educ, [])
         self.assertEqual(plan, ())
 
     def test_no_goal(self):
-        plan = course_scheduler([], [])
+        plan = course_scheduler(self.course_dict, [], [])
         self.assertEqual(plan, ())
 
     def test_proper_terms(self):
         # ensuring the correct years and terms are included
         # this goal should result in a 3-semester plan
-        plan = course_scheduler([('MATH', '4110')], [])
+        plan = course_scheduler(self.course_dict, [('MATH', '4110')], [])
         split_plan = split_by_term(plan)
         years = list(split_plan.keys())
         self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
@@ -65,17 +68,17 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_goal_satisfied(self):
         # testing the scheduler when the provided goal has already been satisfied
-        plan = course_scheduler([('CS','1101')], [('CS','1101')])
+        plan = course_scheduler(self.course_dict, [('CS','1101')], [('CS','1101')])
         self.assertEqual(plan, ())
 
     def test_one_class_goal(self):
         # sum of credits must not be less than 12 per term
-        plan = course_scheduler([('CS', '3250')], [])
+        plan = course_scheduler(self.course_dict, [('CS', '3250')], [])
         total_credits = 0
         self.assertTrue(total_credits >= 12)
 
     def test_initial_state(self):
-        plan = course_scheduler([('CS', '1101'), ('SPAN', '1102'), ('SPAN', '3325')],
+        plan = course_scheduler(self.course_dict, [('CS', '1101'), ('SPAN', '1102'), ('SPAN', '3325')],
                                 [('SPAN', '1101')])
         # the prereq for SPAN1102 is already satisfied so neither of its prereqs should be in the plan
         for course in plan:
@@ -84,7 +87,7 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_simple_plan(self):
         # in this case, there is no ambiguity in the optimal terms to schedule the goal and its prereqs in
-        plan = course_scheduler([('MATH', '2410')], [])
+        plan = course_scheduler(self.course_dict, [('MATH', '2410')], [])
         split_plan = split_by_term(plan)
         self.assertTrue(('MATH', '1200') in split_plan['Frosh']['Fall']['courses']
                         or ('MATH', '1300') in split_plan['Frosh']['Fall']['courses'])
@@ -101,7 +104,7 @@ class TestCourseScheduler(unittest.TestCase):
     def test_logistics(self):
         # ensure that all scheduled courses are actual courses (ie. are not higher level requirements or empty)
         # and are offered during the semester they are scheduled
-        plan = course_scheduler([('CS', 'major')], [])
+        plan = course_scheduler(self.course_dict, [('CS', 'major')], [])
         split_plan = split_by_term(plan)
         Course = namedtuple('Course', 'program, designation')
         for year in split_plan:
@@ -116,9 +119,9 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_5_credits(self):
         # goal of only 4 courses, but cannot all fit in one term since they're all 5-credit
-        split_plan = course_scheduler([('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
-        # split_plan = split_by_term(plan)
-
+        plan = course_scheduler(self.course_dict,
+                                 [('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
+        split_plan = split_by_term(plan)
         self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
         self.assertNotEqual(split_plan['Frosh']['Spring']['courses'], [])
         self.assertEqual(split_plan['Soph']['Fall']['courses'], [])
@@ -130,7 +133,7 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_spanish_major(self):
         # more thoroughly testing the spanish major plan (according to the catalog and project spec it is very simple)
-        plan = course_scheduler([('SPAN', 'major')], [])
+        plan = course_scheduler(self.span_dict, [('SPAN', 'major')], [])
         split_plan = split_by_term(plan)
         # ensure proper number of credits each semester
         for year in split_plan:
@@ -242,6 +245,50 @@ def add_span_major():
     span_dict[major_course] = major_info
 
     return span_dict
+
+class Group10Tests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # create dictionaries using all the different catalogs Group 10 made
+        cls.catalog1 = create_course_dict('group10tests/1.xlsx')
+        cls.catalog2 = create_course_dict('group10tests/2.xlsx')
+        cls.catalog3 = create_course_dict('group10tests/3.xlsx')
+        cls.catalog4 = create_course_dict('group10tests/4.xlsx')
+        cls.catalog5 = create_course_dict('group10tests/5.xlsx')
+        cls.catalog6 = create_course_dict('group10tests/6.xlsx')
+        cls.catalog7 = create_course_dict('group10tests/7.xlsx')
+        cls.catalog8 = create_course_dict('group10tests/8.xlsx')
+        cls.catalog9 = create_course_dict('group10tests/9.xlsx')
+        cls.catalog10 = create_course_dict('group10tests/10.xlsx')
+        cls.catalog11 = create_course_dict('group10tests/11.xlsx')
+
+    #def test1(self):
+
+
+def create_course_dict(fname):
+    """
+    (this is copied from the provided readcsv.py, but slightly modified so that any course catalog file can be used)
+
+    Creates a dictionary containing course info.
+    Keys: namedtuple of the form ('program, designation')
+    Values: namedtuple of the form('name, prereqs, credits')
+            prereqs is a tuple of prereqs where each prereq has the same form as the keys
+    """
+    warnings.simplefilter("ignore")
+    wb = load_workbook(fname)
+    catalog = wb.get_sheet_by_name('catalog')
+    Course = namedtuple('Course', 'program, designation')
+    CourseInfo = namedtuple('CourseInfo', 'credits, terms, prereqs')
+    course_dict = {}
+    for row in range(1, catalog.max_row + 1):
+        key = Course(course_dictionary.get_val(catalog, 'A', row), course_dictionary.get_val(catalog, 'B', row))
+        prereqs = tuple(tuple(course_dictionary.get_split_course(prereq) for prereq in prereqs.split())
+                        for prereqs in course_dictionary.none_split(course_dictionary.get_val(catalog, 'E', row)))
+        val = CourseInfo(course_dictionary.get_val(catalog, 'C', row), tuple(course_dictionary.get_val(catalog, 'D', row).split()), prereqs)
+        course_dict[key] = val
+    return course_dict
+
 
 if __name__ == "__main__":
     unittest.main()

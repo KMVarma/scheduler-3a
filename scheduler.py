@@ -4,15 +4,9 @@ from utils import format_prereqs
 from course import Course
 import time
 
-course_dict = readcsv.create_course_dict()
-new_dict = {}
-for course, course_info in course_dict.items():
-    new_dict[(course.program, course.designation)] = \
-        Course((course.program, course.designation),
-               format_prereqs(course_info.prereqs), course_info.terms, int(course_info.credits))
-course_dict = new_dict
 
-def course_scheduler (goal_conditions, initial_state):
+
+def course_scheduler (course_descriptions, goal_conditions, initial_state):
     """
     returns a list of courses (with their respective prereqs) that need to be satisfied to satisfy the goal conditions
 
@@ -21,6 +15,7 @@ def course_scheduler (goal_conditions, initial_state):
     :param course_macros: dictionary of high-level requirements and sequence of classes to satisfy
     :return: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...] that need to be scheduled
     """
+    course_dict = reformat_dict(course_descriptions)
     start_time = time.time()
     cpu_time = time.clock()
     goals = []
@@ -31,10 +26,10 @@ def course_scheduler (goal_conditions, initial_state):
     for init in initial_state:
         classes_taken.append(course_dict[init])
     schedule = []
-    course_macros = create_macros(goal_conditions)
+    course_macros = create_macros(course_dict, goal_conditions)
     goal_name = course_dict['CS', 'major']
 
-    courselist = satisfy_goals(goals, classes_taken, schedule, course_macros, goal_name)
+    courselist = satisfy_goals(course_dict, goals, classes_taken, schedule, course_macros, goal_name)
 
     planner = Schedule()
     result = planner.planner(courselist)
@@ -47,9 +42,17 @@ def course_scheduler (goal_conditions, initial_state):
     print("Schedule found in {:4f} wall seconds.".format(duration))
     print("Schedule found in {:4f} cpu seconds.".format(cpu_duration))
     print(planner)
-    return planner.retrieve_dict()
+    return planner.format_plan()
 
-def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name):
+def reformat_dict(course_dict):
+    new_dict = {}
+    for course, course_info in course_dict.items():
+        new_dict[(course.program, course.designation)] = \
+            Course((course.program, course.designation),
+                   format_prereqs(course_info.prereqs), course_info.terms, int(course_info.credits))
+    return new_dict
+
+def satisfy_goals(course_dict, goal_conditions, taken, schedule, course_macros, goal_name):
     """
     satisfies goal conditions by recursively breaking each goal into prereqs
 
@@ -135,7 +138,7 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name):
                                 break
                     if result:
                         continue
-                    if satisfy_goals(option, taken, schedule, course_macros, goal):
+                    if satisfy_goals(course_dict, option, taken, schedule, course_macros, goal):
                         if goal.hours != 0 and goal not in taken:  # if credits is '0', it's a high-level requirement (not an actual course)
                             # Create course to be added
                             taken.append(goal)
@@ -154,18 +157,19 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name):
 
 
 # Given a high level goal creates a dict of immediate subgoals and a way to satisfy them
-def create_macros(goal_condition):
+def create_macros(course_dict, goal_condition):
     macros_dict = {}
     for name in goal_condition:
         goal = course_dict[name]
         for prereq in sum(goal.prereqs, []):
             schedule = []
-            plan = satisfy_goals([course_dict[prereq]], [], schedule, {}, Course(('Main', 'Main'), [], [], 0))
+            plan = satisfy_goals(course_dict, [course_dict[prereq]], [], schedule, {}, Course(('Main', 'Main'), [], [], 0))
             # print(plan)
             macros_dict[prereq] =  plan
 
     return macros_dict
 
 if __name__ == '__main__':
-    planner = course_scheduler([('CS', 'major')], [])
+    course_descriptions = readcsv.create_course_dict()
+    planner = course_scheduler(course_descriptions, [('CS', 'major')], [])
     print(planner)

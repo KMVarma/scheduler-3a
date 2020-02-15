@@ -96,12 +96,11 @@ class Schedule:
             sum += semester.hours
         return sum
 
-    def retrieve_dict(self):
-        return {'Frosh': {'Fall': {'courses': [str(course.name) for course in self.schedule[0].courses], 'credits': self.schedule[0].hours},
-                                       'Spring': {'courses': [str(course.name) for course in self.schedule[1].courses], 'credits': self.schedule[1].hours}},
-                             'Soph': {'Fall': {'courses': [str(course.name) for course in self.schedule[2].courses], 'credits': self.schedule[2].hours},
-                                      'Spring': {'courses': [str(course.name) for course in self.schedule[3].courses], 'credits': self.schedule[3].hours}},
-                             'Junior': {'Fall': {'courses': [str(course.name) for course in self.schedule[4].courses], 'credits': self.schedule[4].hours},
-                                        'Spring': {'courses': [str(course.name) for course in self.schedule[5].courses], 'credits': self.schedule[5].hours}},
-                             'Senior': {'Fall': {'courses': [str(course.name) for course in self.schedule[6].courses], 'credits': self.schedule[6].hours},
-                                        'Spring': {'courses': [str(course.name) for course in self.schedule[7].courses], 'credits': self.schedule[7].hours}}}
+    def format_plan(self):
+        # ((“CS”, “2201”), (“Spring”, “Frosh”), 3)
+        plan = []
+        for i in range(8):
+            if self.schedule[i].courses:
+                for course in self.schedule[i].courses:
+                    plan.append((course, self.schedule[i].date, course.hours))
+        return tuple(plan)
