@@ -1,7 +1,16 @@
 from schedule import Schedule
-from utils import get_course_info, get_prereqs
+import readcsv
+from utils import format_prereqs
 from course import Course
 import time
+
+course_dict = readcsv.create_course_dict()
+new_dict = {}
+for course, course_info in course_dict.items():
+    new_dict[(course.program, course.designation)] = \
+        Course((course.program, course.designation),
+               format_prereqs(course_info.prereqs), course_info.terms, int(course_info.credits))
+course_dict = new_dict
 
 def course_scheduler (goal_conditions, initial_state, course_macros, goal_name):
     """
@@ -13,9 +22,9 @@ def course_scheduler (goal_conditions, initial_state, course_macros, goal_name):
     :return: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...] that need to be scheduled
     """
     # any prior credits are added to classes taken
-    classes_taken = set()
+    classes_taken = []
     for course in initial_state:
-        classes_taken.add(course)
+        classes_taken.append(course)
     schedule = []
     plan = satisfy_goals(goal_conditions, classes_taken, schedule, course_macros, goal_name)
     # print(plan)
@@ -34,7 +43,7 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name = '
     """
     if not goal_conditions:    # base case, no goals left to satisfy
         return schedule
-    if goal_name == str(('CS', 'openelective')):
+    if goal_name == ('CS', 'open2'):
         print('here')
     while goal_conditions:
         # iteratively satisfy all goal conditions
@@ -45,9 +54,9 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name = '
         for macro, prereqs in course_macros.items():
             if macro == goal:
                 for course in prereqs:
-                    if str(course) not in taken:
+                    if course not in taken:
                         using_macro = True
-                        taken.add(str(course))
+                        taken.append(course)
                         schedule.append(course)
                 goal_conditions.pop(0)
         if using_macro:
@@ -55,20 +64,32 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name = '
 
         # keeping track of the prereqs that were required (in prereqs) and the prereqs that are actually needed
         # (in classes_to_satisfy)
-        prereqs = get_prereqs(goal)
+        # prereqs = get_prereqs(goal)
         #prereqs2 =prereqs
         classes_to_satisfy = []
-        for option in prereqs:
-            classes_to_satisfy.append([x for x in option if x not in taken])
+        # for option in prereqs:
+        for option in goal.prereqs:
+            # classes_to_satisfy.append([x for x in option if x not in taken])
+            classes_to_satisfy.append([course_dict[x] for x in option])
 
         if not classes_to_satisfy:  # no prereqs needed
-            info = get_course_info(goal)
-            if info.credits != '0' and str(goal) not in taken:    # if credits is '0', it's a high-level requirement (not an actual course)
+            # info = get_course_info(goal)
+            if goal == ('BASS', '1000'):
+                print('here')
+            # if goal in taken:
+                # print('duplicate')
+                # return ()
+            # if info.credits != '0' and goal not in taken:    # if credits is '0', it's a high-level requirement (not an actual course)
+            #     # Create course to be added
+            #     course = Course.from_name(goal)
+            #     taken.append(course)
+            #     course.satisfies.append(goal_name)
+            #     schedule.append(course)
+            if goal.hours != 0 and goal not in taken:    # if credits is '0', it's a high-level requirement (not an actual course)
                 # Create course to be added
-                course = Course.from_name(goal)
-                taken.add(str(course.name))
-                course.satisfies.append(goal_name)
-                schedule.append(course)
+                taken.append(goal)
+                goal.satisfies.append(goal_name)
+                schedule.append(goal)
             goal_conditions.pop(0)
 
         else:   # there are prereqs
@@ -82,16 +103,28 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name = '
                     # other option can be ignored
                     if [] not in classes_to_satisfy:
                         option = classes_to_satisfy[i]  # try the ith prereqs option
+                    if option == ('BASS', '1000') or ('BASS', '1000') in option:
+                        print('here')
+                        test = option
+                        result = option[0] in test
+                        if test in taken:
+                            print(True)
                     if satisfy_goals(option, taken, schedule, course_macros, goal):
-                        info = get_course_info(goal)
-                        if info.credits != '0' and str(goal) not in taken:
+                        if goal_name == str(('CS', 'open1')):
+                            print('here')
+                        # info = get_course_info(goal)
+                        # if info.credits != '0' and goal not in taken:
+                        #     # Create course to be added
+                        #     course = Course.from_name(goal)
+                        #     taken.append(course)
+                        #     course.satisfies.append(goal_name)
+                        #     schedule.append(course)
+                        if goal.hours != 0 and goal not in taken:  # if credits is '0', it's a high-level requirement (not an actual course)
                             # Create course to be added
-                            course = Course.from_name(goal)
-                            taken.add(str(course.name))
-                            course.satisfies.append(goal_name)
-                            schedule.append(course)
+                            taken.append(goal)
+                            goal.satisfies.append(goal_name)
+                            schedule.append(goal)
                         if goal_conditions:
-
                             goal_conditions.pop(0)
                         unsatisfied = False
                     else:
@@ -105,15 +138,16 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name = '
 
 # Given a high level goal creates a dict of immediate subgoals and a way to satisfy them
 def create_macros(goal_condition):
-    goals = goal_condition.prereqs[0]
     macros_dict = {}
-    for goal in goals:
+    for goal in goal_condition.prereqs:
+        # goal = Course.from_name(name)
         macros_dict[goal] = course_scheduler([goal], [], {}, str(goal_condition))
 
     return macros_dict
 
 if __name__ == '__main__':
-    target = Course.from_name(('CS', 'major'))
+    # target = Course.from_name(('CS', 'major'))
+    target = course_dict['CS', 'major']
     imports = []
 
     macros_dict = {}
@@ -122,7 +156,7 @@ if __name__ == '__main__':
     #     for prereq in prereqs:
     #         prereq.satisfies.append(macro)
     start_time = time.time()
-    courselist = course_scheduler([('CS', 'major')], imports, macros_dict, str(('CS', 'major')))
+    courselist = course_scheduler([target], imports, macros_dict, str(('CS', 'major')))
     # courselist = [Course.from_name(name) for name, _ in courselist]
     schedule = Schedule()
     schedule.planner(courselist)

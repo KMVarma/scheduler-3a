@@ -1,4 +1,4 @@
-from utils import get_course_info, format_prereqs
+# from utils import get_course_info, format_prereqs
 
 class Course:
     def __init__(self, name, prereqs, terms, hours, satisfies=None):
@@ -25,10 +25,10 @@ class Course:
             return self.name == other
         return False
 
-    @classmethod
-    def from_name(cls, name):
-        info = get_course_info(name)
-        prereqs = format_prereqs(info.prereqs)
-        terms = info.terms
-        hours = int(info.credits)
-        return cls(name, prereqs, terms, hours)
+    # @classmethod
+    # def from_name(cls, name):
+    #     info = get_course_info(name)
+    #     prereqs = sum(format_prereqs(info.prereqs), [])
+    #     terms = info.terms
+    #     hours = int(info.credits)
+    #     return cls(name, prereqs, terms, hours)
