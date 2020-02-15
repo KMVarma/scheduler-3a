@@ -20,6 +20,8 @@ class Course:
         if isinstance(other, Course):
             return self.name == other.name
         if isinstance(other, str):
+            return str(self.name) == other
+        if isinstance(other, tuple):
             return self.name == other
         return False
 

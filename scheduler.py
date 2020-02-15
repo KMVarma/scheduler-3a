@@ -3,7 +3,7 @@ from utils import get_course_info, get_prereqs
 from course import Course
 import time
 
-def course_scheduler (goal_conditions, initial_state, course_macros):
+def course_scheduler (goal_conditions, initial_state, course_macros, goal_name):
     """
     returns a list of courses (with their respective prereqs) that need to be satisfied to satisfy the goal conditions
 
@@ -17,11 +17,11 @@ def course_scheduler (goal_conditions, initial_state, course_macros):
     for course in initial_state:
         classes_taken.add(course)
     schedule = []
-    plan = satisfy_goals(goal_conditions, classes_taken, schedule, course_macros)
+    plan = satisfy_goals(goal_conditions, classes_taken, schedule, course_macros, goal_name)
     # print(plan)
     return plan
 
-def satisfy_goals(goal_conditions, taken, schedule, course_macros):
+def satisfy_goals(goal_conditions, taken, schedule, course_macros, goal_name = ''):
     """
     satisfies goal conditions by recursively breaking each goal into prereqs
 
@@ -34,7 +34,8 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
     """
     if not goal_conditions:    # base case, no goals left to satisfy
         return schedule
-
+    if goal_name == str(('CS', 'openelective')):
+        print('here')
     while goal_conditions:
         # iteratively satisfy all goal conditions
         goal = goal_conditions[0]
@@ -62,10 +63,11 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
 
         if not classes_to_satisfy:  # no prereqs needed
             info = get_course_info(goal)
-            if info.credits != '0':    # if credits is '0', it's a high-level requirement (not an actual course)
+            if info.credits != '0' and str(goal) not in taken:    # if credits is '0', it's a high-level requirement (not an actual course)
                 # Create course to be added
                 course = Course.from_name(goal)
                 taken.add(str(course.name))
+                course.satisfies.append(goal_name)
                 schedule.append(course)
             goal_conditions.pop(0)
 
@@ -80,12 +82,13 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
                     # other option can be ignored
                     if [] not in classes_to_satisfy:
                         option = classes_to_satisfy[i]  # try the ith prereqs option
-                    if satisfy_goals(option, taken, schedule, course_macros):
+                    if satisfy_goals(option, taken, schedule, course_macros, goal):
                         info = get_course_info(goal)
-                        if info.credits != '0':
+                        if info.credits != '0' and str(goal) not in taken:
                             # Create course to be added
                             course = Course.from_name(goal)
                             taken.add(str(course.name))
+                            course.satisfies.append(goal_name)
                             schedule.append(course)
                         if goal_conditions:
 
@@ -105,7 +108,7 @@ def create_macros(goal_condition):
     goals = goal_condition.prereqs[0]
     macros_dict = {}
     for goal in goals:
-        macros_dict[goal] = course_scheduler([goal], [], {})
+        macros_dict[goal] = course_scheduler([goal], [], {}, str(goal_condition))
 
     return macros_dict
 
@@ -113,12 +116,13 @@ if __name__ == '__main__':
     target = Course.from_name(('CS', 'major'))
     imports = []
 
-    macros_dict = create_macros(target)
+    macros_dict = {}
+    # macros_dict = create_macros(target)
     # for macro, prereqs in macros_dict.items():
     #     for prereq in prereqs:
     #         prereq.satisfies.append(macro)
     start_time = time.time()
-    courselist = course_scheduler([('CS', 'major')], imports, macros_dict)
+    courselist = course_scheduler([('CS', 'major')], imports, macros_dict, str(('CS', 'major')))
     # courselist = [Course.from_name(name) for name, _ in courselist]
     schedule = Schedule()
     schedule.planner(courselist)
