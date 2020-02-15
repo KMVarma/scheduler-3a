@@ -1,6 +1,7 @@
 import readcsv as course_dictionary
 from scheduler import course_scheduler
 from collections import namedtuple
+from schedule import Schedule
 import unittest
 
 class TestCourseScheduler(unittest.TestCase):
@@ -40,17 +41,17 @@ class TestCourseScheduler(unittest.TestCase):
         # there are 100 total ECON and EDUC courses, so it is impossible to take all in 4 years
         all_econ_educ = [(key.program, key.designation) for key in self.course_dict
                          if (key.program == 'ECON' or key.program == 'EDUC')]
-        plan = course_scheduler(self.course_dict, all_econ_educ, [])
+        plan = course_scheduler(all_econ_educ, [])
         self.assertEqual(plan, ())
 
     def test_no_goal(self):
-        plan = course_scheduler(self.course_dict, [], [])
+        plan = course_scheduler([], [])
         self.assertEqual(plan, ())
 
     def test_proper_terms(self):
         # ensuring the correct years and terms are included
         # this goal should result in a 3-semester plan
-        plan = course_scheduler(self.course_dict, [('MATH', '4110')], [])
+        plan = course_scheduler([('MATH', '4110')], [])
         split_plan = split_by_term(plan)
         years = list(split_plan.keys())
         self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
@@ -64,17 +65,17 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_goal_satisfied(self):
         # testing the scheduler when the provided goal has already been satisfied
-        plan = course_scheduler(self.course_dict, [('CS','1101')], [('CS','1101')])
+        plan = course_scheduler([('CS','1101')], [('CS','1101')])
         self.assertEqual(plan, ())
 
     def test_one_class_goal(self):
         # sum of credits must not be less than 12 per term
-        plan = course_scheduler(self.course_dict, [('CS', '3250')], [])
+        plan = course_scheduler([('CS', '3250')], [])
         total_credits = 0
         self.assertTrue(total_credits >= 12)
 
     def test_initial_state(self):
-        plan = course_scheduler(self.course_dict, [('CS', '1101'), ('SPAN', '1102'), ('SPAN', '3325')],
+        plan = course_scheduler([('CS', '1101'), ('SPAN', '1102'), ('SPAN', '3325')],
                                 [('SPAN', '1101')])
         # the prereq for SPAN1102 is already satisfied so neither of its prereqs should be in the plan
         for course in plan:
@@ -83,7 +84,7 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_simple_plan(self):
         # in this case, there is no ambiguity in the optimal terms to schedule the goal and its prereqs in
-        plan = course_scheduler(self.course_dict, [('MATH', '2410')], [])
+        plan = course_scheduler([('MATH', '2410')], [])
         split_plan = split_by_term(plan)
         self.assertTrue(('MATH', '1200') in split_plan['Frosh']['Fall']['courses']
                         or ('MATH', '1300') in split_plan['Frosh']['Fall']['courses'])
@@ -100,7 +101,7 @@ class TestCourseScheduler(unittest.TestCase):
     def test_logistics(self):
         # ensure that all scheduled courses are actual courses (ie. are not higher level requirements or empty)
         # and are offered during the semester they are scheduled
-        plan = course_scheduler(self.course_dict, [('CS', 'major')], [])
+        plan = course_scheduler([('CS', 'major')], [])
         split_plan = split_by_term(plan)
         Course = namedtuple('Course', 'program, designation')
         for year in split_plan:
@@ -115,8 +116,9 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_5_credits(self):
         # goal of only 4 courses, but cannot all fit in one term since they're all 5-credit
-        plan = course_scheduler([('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
-        split_plan = split_by_term(plan)
+        split_plan = course_scheduler([('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
+        # split_plan = split_by_term(plan)
+
         self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
         self.assertNotEqual(split_plan['Frosh']['Spring']['courses'], [])
         self.assertEqual(split_plan['Soph']['Fall']['courses'], [])
