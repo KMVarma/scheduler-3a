@@ -22,7 +22,7 @@ def course_scheduler (goal_conditions, initial_state):
     :return: a list of course-prereq tuples [(course1, [prereqs]), (course2, [prereqs]), ...] that need to be scheduled
     """
     start_time = time.time()
-
+    cpu_time = time.clock()
     goals = []
     for goal in goal_conditions:
         goals.append(course_dict[goal])
@@ -43,7 +43,9 @@ def course_scheduler (goal_conditions, initial_state):
         return ()
 
     duration = time.time() - start_time
-    print("Schedule found in {:4f} seconds.".format(duration))
+    cpu_duration =  time.clock() - cpu_time
+    print("Schedule found in {:4f} wall seconds.".format(duration))
+    print("Schedule found in {:4f} cpu seconds.".format(cpu_duration))
     print(planner)
     return planner.retrieve_dict()
 
