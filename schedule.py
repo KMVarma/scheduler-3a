@@ -21,33 +21,39 @@ class Schedule:
         expects course object
         searches for earlies appropriate semester to add course
         '''
+        if semester_idx > 7:
+            raise ValueError('Can\'t fit course')
+        targetsem = self.schedule[semester_idx]
+        if targetsem.date[0] not in course.terms:
+            return self.add_course(course, semester_idx + 1)
 
         # check for course conflicts
         conflicting_courses = []
         moved_hours = 0
-        for scheduled_course in self.schedule[semester_idx].courses:
+        for scheduled_course in targetsem.courses:
             if course.name in scheduled_course.prereqs:
                 conflicting_courses.append(scheduled_course)
                 moved_hours += scheduled_course.hours
 
         # conditions for throwing errors
         if (len(conflicting_courses) > 0) and semester_idx > 6:
-            print('Scheduling not possible')
-            exit(-1)
+            raise ValueError('Can\'t fit course')
 
         # reschedule any course conflicts
         for scheduled_course in conflicting_courses:
-            self.schedule[semester_idx].remove(scheduled_course)
+            targetsem.remove(scheduled_course)
             self.add_course(scheduled_course, semester_idx + 1)
 
         # shift chain of courses up if not enough hours in semester to fit
-        if self.schedule[semester_idx].hours - moved_hours + course.hours > self.MAX_HOURS:
+        while targetsem.hours + course.hours > self.MAX_HOURS:
             if semester_idx > 6:
-                print('Scheduling not possible')
-                exit(-1)
-            self.add_course(course, semester_idx + 1)
-        else:
-            self.schedule[semester_idx].add(course)
+                raise ValueError('Can\'t fit course')
+
+            #choose a random course (first for now)
+            course_to_move = targetsem.courses[0]
+            targetsem.remove(course_to_move)
+
+        self.schedule[semester_idx].add(course)
 
     def remove_course(self, course, semester):
         '''

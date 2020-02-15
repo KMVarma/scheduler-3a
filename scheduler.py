@@ -111,9 +111,8 @@ if __name__ == '__main__':
     start_time = time.time()
     courselist = course_scheduler(course_dict, [('CS', 'major')], [], macros_dict)
 
-    duration = time.time() - start_time
-
     schedule = Schedule()
     schedule.planner(courselist)
+    duration = time.time() - start_time
     print("Schedule found in {:4f} seconds.".format(duration))
     print(schedule)
