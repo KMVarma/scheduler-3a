@@ -1,12 +1,12 @@
 from schedule import Schedule
-from utils import course_dict, get_course_info, get_prereqs
+from utils import get_course_info, get_prereqs
+from course import Course
 import time
 
-def course_scheduler (course_descriptions, goal_conditions, initial_state, course_macros):
+def course_scheduler (goal_conditions, initial_state, course_macros):
     """
     returns a list of courses (with their respective prereqs) that need to be satisfied to satisfy the goal conditions
 
-    :param course_descriptions: course dictionary
     :param goal_conditions: goals that need to be satisfied
     :param initial_state: courses that have already been taken
     :param course_macros: dictionary of high-level requirements and sequence of classes to satisfy
@@ -43,10 +43,10 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
         # if goal is in macros use precomputed courses
         for macro, prereqs in course_macros.items():
             if macro == goal:
-                using_macro = True
                 for course in prereqs:
-                    if course[0] not in taken:
-                        taken.add(course[0])
+                    if str(course) not in taken:
+                        using_macro = True
+                        taken.add(str(course))
                         schedule.append(course)
                 goal_conditions.pop(0)
         if using_macro:
@@ -63,8 +63,10 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
         if not classes_to_satisfy:  # no prereqs needed
             info = get_course_info(goal)
             if info.credits != '0':    # if credits is '0', it's a high-level requirement (not an actual course)
-                taken.add(goal)
-                schedule.append((goal, prereqs))
+                # Create course to be added
+                course = Course.from_name(goal)
+                taken.add(str(course.name))
+                schedule.append(course)
             goal_conditions.pop(0)
 
         else:   # there are prereqs
@@ -81,8 +83,10 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
                     if satisfy_goals(option, taken, schedule, course_macros):
                         info = get_course_info(goal)
                         if info.credits != '0':
-                            taken.add(goal)
-                            schedule.append((goal, prereqs))
+                            # Create course to be added
+                            course = Course.from_name(goal)
+                            taken.add(str(course.name))
+                            schedule.append(course)
                         if goal_conditions:
 
                             goal_conditions.pop(0)
@@ -97,22 +101,28 @@ def satisfy_goals(goal_conditions, taken, schedule, course_macros):
 
 
 # Given a high level goal creates a dict of immediate subgoals and a way to satisfy them
-def create_macros(course_descriptions, goal_condition):
-    goals = get_prereqs(goal_condition)[0]
+def create_macros(goal_condition):
+    goals = goal_condition.prereqs[0]
     macros_dict = {}
     for goal in goals:
-        macros_dict[goal] = course_scheduler(course_descriptions, [goal], [], {})
+        macros_dict[goal] = course_scheduler([goal], [], {})
 
     return macros_dict
 
 if __name__ == '__main__':
+    target = Course.from_name(('CS', 'major'))
+    imports = []
 
-    macros_dict = create_macros(course_dict, ('CS', 'major'))
+    macros_dict = create_macros(target)
+    # for macro, prereqs in macros_dict.items():
+    #     for prereq in prereqs:
+    #         prereq.satisfies.append(macro)
     start_time = time.time()
-    courselist = course_scheduler(course_dict, [('CS', 'major')], [], macros_dict)
-
+    courselist = course_scheduler([('CS', 'major')], imports, macros_dict)
+    # courselist = [Course.from_name(name) for name, _ in courselist]
     schedule = Schedule()
     schedule.planner(courselist)
     duration = time.time() - start_time
+
     print("Schedule found in {:4f} seconds.".format(duration))
     print(schedule)

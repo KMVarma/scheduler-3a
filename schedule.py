@@ -1,6 +1,4 @@
-from utils import get_course_info
 from semester import Semester
-from course import Course
 
 
 class Schedule:
@@ -21,8 +19,6 @@ class Schedule:
         expects course object
         searches for earlies appropriate semester to add course
         '''
-        if course.name == ('CS', '1101'):
-            print('here')
         if semester_idx > 7:
             raise ValueError('Can\'t fit course')
         targetsem = self.schedule[semester_idx]
@@ -33,7 +29,7 @@ class Schedule:
         conflicting_courses = []
         moved_hours = 0
         for scheduled_course in targetsem.courses:
-            if course.name in scheduled_course.prereqs:
+            if course.name in sum(scheduled_course.prereqs, []):
                 conflicting_courses.append(scheduled_course)
                 moved_hours += scheduled_course.hours
 
@@ -51,8 +47,8 @@ class Schedule:
             if semester_idx > 6:
                 raise ValueError('Can\'t fit course')
 
-            #choose a random course (first for now)
-            course_to_move = targetsem.courses[0]
+            #choose a random course (last one since it most likely has the least dependencies)
+            course_to_move = targetsem.courses[-1]
             targetsem.remove(course_to_move)
             self.add_course(course_to_move, semester_idx + 1)
 
@@ -68,16 +64,15 @@ class Schedule:
         string = ''
         for sem in self.schedule:
             string += str(sem)
+        string += 'Total Hours: ' + str(self.total_hours())
         return string
 
     def clear(self):
         for sem in self.schedule:
             sem.clear()
 
-    def planner(self, semesterlist):
-        for name, prereqs in reversed(semesterlist):
-            info = get_course_info(name)
-            course = Course(name, sum(prereqs, []), info.terms, int(info.credits))
+    def planner(self, course_list):
+        for course in reversed(course_list):
             self.add_course(course, 0)
 
     def is_good(self):

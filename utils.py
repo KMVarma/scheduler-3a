@@ -24,7 +24,12 @@ def get_prereqs(course):
     course_info = get_course_info(course)
     if not course_info:
       return prereqs
-    for potential_courses in course_info.prereqs:
+    return format_prereqs(course_info.prereqs)
+
+
+def format_prereqs(prereqs_tuple):
+    prereqs = []
+    for potential_courses in prereqs_tuple:
         needed_courses = [course for course in potential_courses]
         prereqs.append(needed_courses)
     return prereqs
