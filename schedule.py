@@ -29,7 +29,7 @@ class Schedule:
         conflicting_courses = []
         moved_hours = 0
         for scheduled_course in targetsem.courses:
-            if course.name in scheduled_course.prereqs:
+            if course.name in sum(scheduled_course.prereqs, []):
                 conflicting_courses.append(scheduled_course)
                 moved_hours += scheduled_course.hours
 
