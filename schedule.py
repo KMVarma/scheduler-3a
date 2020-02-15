@@ -21,6 +21,8 @@ class Schedule:
         expects course object
         searches for earlies appropriate semester to add course
         '''
+        if course.name == ('CS', '1101'):
+            print('here')
         if semester_idx > 7:
             raise ValueError('Can\'t fit course')
         targetsem = self.schedule[semester_idx]
@@ -52,6 +54,7 @@ class Schedule:
             #choose a random course (first for now)
             course_to_move = targetsem.courses[0]
             targetsem.remove(course_to_move)
+            self.add_course(course_to_move, semester_idx + 1)
 
         self.schedule[semester_idx].add(course)
 
