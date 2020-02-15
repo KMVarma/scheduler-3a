@@ -108,11 +108,12 @@ def create_macros(course_descriptions, goal_condition):
 if __name__ == '__main__':
 
     macros_dict = create_macros(course_dict, ('CS', 'major'))
-    start_time = time.clock()
+    start_time = time.time()
     courselist = course_scheduler(course_dict, [('CS', 'major')], [], macros_dict)
 
-    duration = time.clock() - start_time
+    duration = time.time() - start_time
+
     schedule = Schedule()
     schedule.planner(courselist)
-    print("Schedule found in ", duration, " seconds.")
+    print("Schedule found in {:4f} seconds.".format(duration))
     print(schedule)
