@@ -20,7 +20,8 @@ class Schedule:
         searches for earlies appropriate semester to add course
         '''
         if semester_idx > 7:
-            raise ValueError('Can\'t fit course')
+            # raise ValueError('Can\'t fit course')
+            return False
         targetsem = self.schedule[semester_idx]
         if targetsem.date[0] not in course.terms:
             return self.add_course(course, semester_idx + 1)
@@ -35,7 +36,8 @@ class Schedule:
 
         # conditions for throwing errors
         if (len(conflicting_courses) > 0) and semester_idx > 6:
-            raise ValueError('Can\'t fit course')
+            # raise ValueError('Can\'t fit course')
+            return False
 
         # reschedule any course conflicts
         for scheduled_course in conflicting_courses:
@@ -45,13 +47,13 @@ class Schedule:
         # shift chain of courses up if not enough hours in semester to fit
         while targetsem.hours + course.hours > self.MAX_HOURS:
             if semester_idx > 6:
-                raise ValueError('Can\'t fit course')
+                # raise ValueError('Can\'t fit course')
+                return False
 
             #choose a random course (last one since it most likely has the least dependencies)
             course_to_move = targetsem.courses[-1]
             targetsem.remove(course_to_move)
             self.add_course(course_to_move, semester_idx + 1)
-
         self.schedule[semester_idx].add(course)
 
     def remove_course(self, course, semester):
@@ -74,6 +76,7 @@ class Schedule:
     def planner(self, course_list):
         for course in reversed(course_list):
             self.add_course(course, 0)
+        return True
 
     def is_good(self):
         for semester in self.schedule:

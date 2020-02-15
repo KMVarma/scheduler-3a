@@ -115,8 +115,7 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_5_credits(self):
         # goal of only 4 courses, but cannot all fit in one term since they're all 5-credit
-        plan = course_scheduler(self.course_dict,
-                                 [('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
+        plan = course_scheduler([('SPAN', '1100'), ('SPAN', '1101'), ('SPAN', '1103'), ('SPAN', '2203')], [])
         split_plan = split_by_term(plan)
         self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
         self.assertNotEqual(split_plan['Frosh']['Spring']['courses'], [])
@@ -129,7 +128,7 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_spanish_major(self):
         # more thoroughly testing the spanish major plan (according to the catalog and project spec it is very simple)
-        plan = course_scheduler(self.span_dict, [('SPAN', 'major')], [])
+        plan = course_scheduler([('SPAN', 'major')], [])
         split_plan = split_by_term(plan)
         # ensure proper number of credits each semester
         for year in split_plan:
