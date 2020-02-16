@@ -140,6 +140,7 @@ class TestCourseScheduler(unittest.TestCase):
             unique_courses.add(course[0].name)
         self.assertEqual(len(unique_courses), len(plan))
 
+    """
     def test_spanish_major(self):
         # more thoroughly testing the spanish major plan (according to the catalog and project spec it is very simple)
         plan = course_scheduler(self.span_dict, [('SPAN', 'major')], [])
@@ -176,6 +177,7 @@ class TestCourseScheduler(unittest.TestCase):
         self.assertTrue(electives_count <= 0)
         # check that there are no duplicates
         self.assertNotEqual(len(courses), len(set(courses)))
+    """
 
 def split_by_term(plan):
     """
@@ -207,50 +209,50 @@ def add_span_major():
 
     # Core requirements: 3301W, 3302, and 3303
     core_course = Course('SPAN', 'core')
-    core_info = CourseInfo(0, 'Spring, Fall', 'SPAN3301W SPAN3302 SPAN3303')
+    core_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','3301W'), Course('SPAN','3302'), Course('SPAN','3303')))
     span_dict[core_course] = core_info
 
     # Literature: 9 credit hours from courses numbered 4400–4980 or 3835, or 3893
     literature_course = Course('SPAN', 'literature')
-    literature_info = CourseInfo(0, 'Spring, Fall', 'SPANliterature1 SPANliterature2 SPANliterature3')
+    literature_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','literature1'), Course('SPAN','literature2'), Course('SPAN','literature3')))
     span_dict[literature_course] = literature_info
 
     lit1_course = Course('SPAN', 'literature1')
-    lit1_info = CourseInfo(0, 'Spring, Fall', 'SPAN4405,SPAN4420,SPAN4425,SPAN4620,SPAN4670,SPAN4750,SPAN4760,SPAN4415,SPAN4450,SPAN4465,SPAN4475,SPAN4550,SPAN4740,SPAN4355,SPAN4640,SPAN4730,SPAN4741,SPAN4400,SPAN4440')
+    lit1_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','4405'), Course('SPAN','4420') ,Course('SPAN','4425'), Course('SPAN','4620'), Course('SPAN','4670'), Course('SPAN','4750'), Course('SPAN','4760'), Course('SPAN','4415'), Course('SPAN','4450'), Course('SPAN','4465'), Course('SPAN','4475'), Course('SPAN','4550'), Course('SPAN','4740'), Course('SPAN','4355'), Course('SPAN','4640'), Course('SPAN','4730'), Course('SPAN','4741'), Course('SPAN','4400'), Course('SPAN','4440')))
     span_dict[lit1_course] = lit1_info
 
     lit2_course = Course('SPAN', 'literature2')
-    lit2_info = CourseInfo(0, 'Spring, Fall', 'SPAN4405,SPAN4420,SPAN4425,SPAN4620,SPAN4670,SPAN4750,SPAN4760,SPAN4415,SPAN4450,SPAN4465,SPAN4475,SPAN4550,SPAN4740,SPAN4355,SPAN4640,SPAN4730,SPAN4741,SPAN4400,SPAN4440')
+    lit2_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','4405'), Course('SPAN','4420') ,Course('SPAN','4425'), Course('SPAN','4620'), Course('SPAN','4670'), Course('SPAN','4750'), Course('SPAN','4760'), Course('SPAN','4415'), Course('SPAN','4450'), Course('SPAN','4465'), Course('SPAN','4475'), Course('SPAN','4550'), Course('SPAN','4740'), Course('SPAN','4355'), Course('SPAN','4640'), Course('SPAN','4730'), Course('SPAN','4741'), Course('SPAN','4400'), Course('SPAN','4440')))
     span_dict[lit2_course] = lit2_info
 
     lit3_course = Course('SPAN', 'literature3')
-    lit3_info = CourseInfo(0, 'Spring, Fall', 'SPAN4405,SPAN4420,SPAN4425,SPAN4620,SPAN4670,SPAN4750,SPAN4760,SPAN4415,SPAN4450,SPAN4465,SPAN4475,SPAN4550,SPAN4740,SPAN4355,SPAN4640,SPAN4730,SPAN4741,SPAN4400,SPAN4440')
+    lit3_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','4405'), Course('SPAN','4420') ,Course('SPAN','4425'), Course('SPAN','4620'), Course('SPAN','4670'), Course('SPAN','4750'), Course('SPAN','4760'), Course('SPAN','4415'), Course('SPAN','4450'), Course('SPAN','4465'), Course('SPAN','4475'), Course('SPAN','4550'), Course('SPAN','4740'), Course('SPAN','4355'), Course('SPAN','4640'), Course('SPAN','4730'), Course('SPAN','4741'), Course('SPAN','4400'), Course('SPAN','4440')))
     span_dict[lit3_course] = lit3_info
 
     # Linguistics: 3 credit hours from courses numbered 4300–4360, or 3892
     linguistic_course = Course('SPAN', 'linguistic')
-    linguistic_info = CourseInfo(0, 'Spring, Fall', 'SPAN3892,SPAN4315,SPAN4320,SPAN4340,SPAN4345,SPAN4310,SPAN4335,SPAN4355,SPAN4325')
+    linguistic_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','3892'),Course('SPAN','4315'),Course('SPAN','4320'),Course('SPAN','4340'),Course('SPAN','4345'),Course('SPAN','4310'),Course('SPAN','4335'),Course('SPAN','4355'),Course('SPAN','4325')))
     span_dict[linguistic_course] = linguistic_info
 
     # Electives: 9 credit hours from courses numbered 3320–3835 or 3891-4980
     elective_course = Course('SPAN', 'electives')
-    elective_info = CourseInfo(0, 'Spring, Fall', 'SPANelectives1 SPANelectives2 SPANelectives3')
+    elective_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','electives1'), Course('SPAN','electives2'), Course('SPAN','electives3')))
     span_dict[elective_course] = elective_info
 
     elective1_course = Course('SPAN', 'electives1')
-    elective1_info = CourseInfo(0, 'Spring, Fall', 'SPAN3340,SPAN3345,SPAN3355,SPAN3360,SPAN3830,SPAN3365,SPAN3835,SPAN3325,SPAN3330,SPAN3350')
+    elective1_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','3340'),Course('SPAN','3345'),Course('SPAN','3355'),Course('SPAN','3360'),Course('SPAN','3830'),Course('SPAN','3365'),Course('SPAN','3835'),Course('SPAN','3325'),Course('SPAN','3330'),Course('SPAN','3350')))
     span_dict[elective1_course] = elective1_info
 
     elective2_course = Course('SPAN', 'electives2')
-    elective2_info = CourseInfo(0, 'Spring, Fall', 'SPAN3340,SPAN3345,SPAN3355,SPAN3360,SPAN3830,SPAN3365,SPAN3835,SPAN3325,SPAN3330,SPAN3350')
+    elective2_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','3340'),Course('SPAN','3345'),Course('SPAN','3355'),Course('SPAN','3360'),Course('SPAN','3830'),Course('SPAN','3365'),Course('SPAN','3835'),Course('SPAN','3325'),Course('SPAN','3330'),Course('SPAN','3350')))
     span_dict[elective2_course] = elective2_info
 
     elective3_course = Course('SPAN', 'electives3')
-    elective3_info = CourseInfo(0, 'Spring, Fall', 'SPAN3340,SPAN3345,SPAN3355,SPAN3360,SPAN3830,SPAN3365,SPAN3835,SPAN3325,SPAN3330,SPAN3350')
+    elective3_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','3340'),Course('SPAN','3345'),Course('SPAN','3355'),Course('SPAN','3360'),Course('SPAN','3830'),Course('SPAN','3365'),Course('SPAN','3835'),Course('SPAN','3325'),Course('SPAN','3330'),Course('SPAN','3350')))
     span_dict[elective3_course] = elective3_info
 
     major_course = Course('SPAN', 'major')
-    major_info = CourseInfo(0, 'Spring, Fall', 'SPANcore SPANliterature SPANlinguistic SPANelectives')
+    major_info = CourseInfo(0, 'Spring, Fall', (Course('SPAN','core'),Course('SPAN','literature'), Course('SPAN','linguistic'), Course('SPAN','electives')))
     span_dict[major_course] = major_info
 
     return span_dict
@@ -272,7 +274,20 @@ class Group10Tests(unittest.TestCase):
         cls.catalog10 = create_course_dict('group10tests/10.xlsx')
         cls.catalog11 = create_course_dict('group10tests/11.xlsx')
 
-    #def test1(self):
+    """
+    def test_all(self):
+        plan1 = course_scheduler(self.catalog1, [('CS', 'major')], [])
+        plan2 = course_scheduler(self.catalog2, [('CS', 'major')], [])
+        plan3 = course_scheduler(self.catalog3, [('CS', 'major')], [])
+        plan4 = course_scheduler(self.catalog4, [('CS', 'major')], [])
+        plan5 = course_scheduler(self.catalog5, [('CS', 'major')], [])
+        plan6 = course_scheduler(self.catalog6, [('CS', 'major')], [])
+        plan7 = course_scheduler(self.catalog7, [('CS', 'major')], [])
+        plan8 = course_scheduler(self.catalog8, [('CS', 'major')], [])
+        plan9 = course_scheduler(self.catalog9, [('CS', 'major')], [])
+        plan10 = course_scheduler(self.catalog10, [('CS', 'major')], [])
+        plan11 = course_scheduler(self.catalog11, [('CS', 'major')], [])
+    """
 
 
 def create_course_dict(fname):
