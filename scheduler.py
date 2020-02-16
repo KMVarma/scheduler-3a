@@ -172,4 +172,3 @@ def create_macros(course_dict, goal_condition):
 if __name__ == '__main__':
     course_descriptions = readcsv.create_course_dict()
     planner = course_scheduler(course_descriptions, [('CS', 'major')], [])
-    print(planner)
