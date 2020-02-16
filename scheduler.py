@@ -41,7 +41,7 @@ def course_scheduler (course_descriptions, goal_conditions, initial_state):
     cpu_duration =  time.clock() - cpu_time
     print("Schedule found in {:4f} wall seconds.".format(duration))
     print("Schedule found in {:4f} cpu seconds.".format(cpu_duration))
-    #print(planner)
+    print(planner)
     return planner.format_plan()
 
 def reformat_dict(course_dict):
@@ -165,14 +165,13 @@ def create_macros(course_dict, goal_condition):
         for prereq in sum(goal.prereqs, []):
             schedule = []
             plan = satisfy_goals(course_dict, [course_dict[prereq]], [], schedule, {}, Course(('Main', 'Main'), [], [], 0))
-            # print(plan)
-            macros_dict[prereq] =  plan
+            macros_dict[prereq] = plan
 
     return macros_dict
 
 if __name__ == '__main__':
+    goals = [('CS', 'major')]
+    inits = []
     course_descriptions = readcsv.create_course_dict()
-    # planner = course_scheduler(course_descriptions, [('CS', '3250')], [])
-    planner = course_scheduler(course_descriptions, [], [])
-    #print(planner)
-    # planner = course_scheduler(course_descriptions, [('CS', 'major')], [])
+    planner = course_scheduler(course_descriptions, goals, inits)
+    # print(planner)
