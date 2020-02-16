@@ -31,7 +31,7 @@ def course_scheduler (course_descriptions, goal_conditions, initial_state):
 
     courselist = satisfy_goals(course_dict, goals, classes_taken, schedule, course_macros, goal_name)
 
-    planner = Schedule()
+    planner = Schedule(course_dict)
     result = planner.planner(courselist)
 
     if not result:
@@ -102,7 +102,7 @@ def satisfy_goals(course_dict, goal_conditions, taken, schedule, course_macros, 
             if result:
                 return False
 
-            planner = Schedule()
+            planner = Schedule(course_dict)
             result = planner.planner(schedule)
 
             if not result:
@@ -172,6 +172,7 @@ def create_macros(course_dict, goal_condition):
 
 if __name__ == '__main__':
     course_descriptions = readcsv.create_course_dict()
-    planner = course_scheduler(course_descriptions, [('CS', '3250')], [])
+    # planner = course_scheduler(course_descriptions, [('CS', '3250')], [])
+    planner = course_scheduler(course_descriptions, [], [])
     print(planner)
-    planner = course_scheduler(course_descriptions, [('CS', 'major')], [])
+    # planner = course_scheduler(course_descriptions, [('CS', 'major')], [])

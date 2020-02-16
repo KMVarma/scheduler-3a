@@ -1,8 +1,9 @@
 from semester import Semester
+import random
 
 
 class Schedule:
-    def __init__(self):
+    def __init__(self, course_dict):
         self.schedule = [Semester('Fall', 'Frosh'),
                          Semester('Spring', 'Frosh'),
                          Semester('Fall', 'Soph'),
@@ -13,6 +14,8 @@ class Schedule:
                          Semester('Spring', 'Senior')]
         self.MAX_HOURS = 18
         self.MIN_HOURS = 12
+        self.course_dict = course_dict
+        self.taken = []
 
     def add_course(self, course, semester_idx):
         '''
@@ -55,7 +58,28 @@ class Schedule:
             targetsem.remove(course_to_move)
             self.add_course(course_to_move, semester_idx + 1)
         self.schedule[semester_idx].add(course)
+        self.taken.append(course)
         return True
+
+    def get_rand_no_prereqs(self):
+        no_prereq_classes = []
+        for course_name, course in self.course_dict.items():
+            if len(sum(course.prereqs, [])) == 0:
+                no_prereq_classes.append(course)
+
+        return no_prereq_classes
+
+    def fill_to_min(self):
+        no_prereqs = self.get_rand_no_prereqs()
+        for semester in self.schedule:
+            while semester.hours < self.MIN_HOURS:
+                choice = random.choice(no_prereqs)
+                if choice in self.taken:
+                    no_prereqs.remove(choice)
+                else:
+                    semester.add(choice)
+                    no_prereqs.remove(choice)
+
 
     def remove_course(self, course, semester):
         '''
@@ -79,6 +103,7 @@ class Schedule:
             result = self.add_course(course, 0)
             if not result:
                 return False
+        self.fill_to_min()
         return True
 
     def is_good(self):
