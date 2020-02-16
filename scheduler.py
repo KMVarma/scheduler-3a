@@ -41,7 +41,7 @@ def course_scheduler (course_descriptions, goal_conditions, initial_state):
     cpu_duration =  time.clock() - cpu_time
     print("Schedule found in {:4f} wall seconds.".format(duration))
     print("Schedule found in {:4f} cpu seconds.".format(cpu_duration))
-    print(planner)
+    #print(planner)
     return planner.format_plan()
 
 def reformat_dict(course_dict):
@@ -174,5 +174,5 @@ if __name__ == '__main__':
     course_descriptions = readcsv.create_course_dict()
     # planner = course_scheduler(course_descriptions, [('CS', '3250')], [])
     planner = course_scheduler(course_descriptions, [], [])
-    print(planner)
+    #print(planner)
     # planner = course_scheduler(course_descriptions, [('CS', 'major')], [])

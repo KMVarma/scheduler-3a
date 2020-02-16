@@ -34,7 +34,7 @@ class TestCourseScheduler(unittest.TestCase):
         # Prints all the CS courses.
         # for key in self.course_dict:
         #     if key.program == 'CS':
-        #         print(key, self.course_dict[key])
+        #         print('type:', type(key), self.course_dict[key])
         # Prints the entire dictionary.
         # course_dictionary.print_dict(self.course_dict)
         # print(self.course_dict[('CS', 'open3')])
@@ -109,13 +109,12 @@ class TestCourseScheduler(unittest.TestCase):
         # and are offered during the semester they are scheduled
         plan = course_scheduler(self.course_dict, [('CS', 'major')], [])
         split_plan = split_by_term(plan)
-        Course = namedtuple('Course', 'program, designation')
         for year in split_plan:
             for term in split_plan[year]:
                 for course in split_plan[year][term]['courses']:
-                    terms = self.course_dict[course].terms
+                    terms = self.course_dict[course.name].terms
                     self.assertTrue(term in terms)
-                    self.assertNotEqual(self.course_dict[course].credits, 0)
+                    self.assertNotEqual(self.course_dict[course.name].credits, 0)
                 credit = split_plan[year][term]['credits']
                 self.assertTrue((12 <= credit <= 18) or credit == 0)
 
@@ -132,6 +131,14 @@ class TestCourseScheduler(unittest.TestCase):
         self.assertEqual(split_plan['Junior']['Spring']['courses'], [])
         self.assertEqual(split_plan['Senior']['Fall']['courses'], [])
         self.assertEqual(split_plan['Senior']['Spring']['courses'], [])
+
+    def test_open_elective(self):
+        # testing the open elective issue
+        plan = course_scheduler(self.course_dict, [('CS', 'openelectives')], [])
+        unique_courses = set()
+        for course in plan:
+            unique_courses.add(course[0].name)
+        self.assertEqual(len(unique_courses), len(plan))
 
     def test_spanish_major(self):
         # more thoroughly testing the spanish major plan (according to the catalog and project spec it is very simple)
