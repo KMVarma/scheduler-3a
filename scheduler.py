@@ -73,12 +73,13 @@ def satisfy_goals(course_dict, goal_conditions, taken, schedule, course_macros, 
         # if goal is in macros use precomputed courses
         for macro, prereqs in course_macros.items():
             if macro == goal:
-                for course in prereqs:
-                    if course not in taken:
-                        using_macro = True
-                        taken.append(course)
-                        schedule.append(course)
-                goal_conditions.pop(0)
+                if prereqs:
+                    for course in prereqs:
+                        if course not in taken:
+                            using_macro = True
+                            taken.append(course)
+                            schedule.append(course)
+                    goal_conditions.pop(0)
         if using_macro:
             continue
 
@@ -171,5 +172,5 @@ def create_macros(course_dict, goal_condition):
 
 if __name__ == '__main__':
     course_descriptions = readcsv.create_course_dict()
-    planner = course_scheduler(course_descriptions, [('CS', 'major')], [])
+    planner = course_scheduler(course_descriptions, [('CS', '3250')], [])
     print(planner)

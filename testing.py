@@ -53,15 +53,15 @@ class TestCourseScheduler(unittest.TestCase):
 
     def test_proper_terms(self):
         # ensuring the correct years and terms are included
-        # this goal should result in a 3-semester plan
+        # this goal should result in a 5-semester plan
         plan = course_scheduler(self.course_dict, [('MATH', '4110')], [])
         split_plan = split_by_term(plan)
         years = list(split_plan.keys())
         self.assertNotEqual(split_plan['Frosh']['Fall']['courses'], [])
         self.assertNotEqual(split_plan['Frosh']['Spring']['courses'], [])
         self.assertNotEqual(split_plan['Soph']['Fall']['courses'], [])
-        self.assertEqual(split_plan['Soph']['Spring']['courses'], [])
-        self.assertEqual(split_plan['Junior']['Fall']['courses'], [])
+        self.assertNotEqual(split_plan['Soph']['Spring']['courses'], [])
+        self.assertNotEqual(split_plan['Junior']['Fall']['courses'], [])
         self.assertEqual(split_plan['Junior']['Spring']['courses'], [])
         self.assertEqual(split_plan['Senior']['Fall']['courses'], [])
         self.assertEqual(split_plan['Senior']['Spring']['courses'], [])
@@ -74,8 +74,11 @@ class TestCourseScheduler(unittest.TestCase):
     def test_one_class_goal(self):
         # sum of credits must not be less than 12 per term
         plan = course_scheduler(self.course_dict, [('CS', '3250')], [])
-        total_credits = 0
-        self.assertTrue(total_credits >= 12)
+        split_plan = split_by_term(plan)
+        # ensure proper number of credits each semester
+        for year in split_plan:
+            for term in split_plan[year]:
+                self.assertTrue((12 <= split_plan[year][term]['credits'] <= 18) or (split_plan[year][term]['credits'] == 0))
 
     def test_initial_state(self):
         plan = course_scheduler(self.course_dict, [('CS', '1101'), ('SPAN', '1102'), ('SPAN', '3325')],
@@ -108,14 +111,13 @@ class TestCourseScheduler(unittest.TestCase):
         split_plan = split_by_term(plan)
         Course = namedtuple('Course', 'program, designation')
         for year in split_plan:
-            for term in year:
-                for course in term['courses']:
-                    key = Course(course[0], course[1])
-                    terms = self.course_dict[key].terms
+            for term in split_plan[year]:
+                for course in split_plan[year][term]['courses']:
+                    terms = self.course_dict[course].terms
                     self.assertTrue(term in terms)
-                    self.assertNotEqual(self.course_dict[key].credits, 0)
+                    self.assertNotEqual(self.course_dict[course].credits, 0)
                 credit = split_plan[year][term]['credits']
-                self.assertTrue(12 <= credit <= 18)
+                self.assertTrue((12 <= credit <= 18) or credit == 0)
 
     def test_5_credits(self):
         # goal of only 4 courses, but cannot all fit in one term since they're all 5-credit
@@ -137,8 +139,8 @@ class TestCourseScheduler(unittest.TestCase):
         split_plan = split_by_term(plan)
         # ensure proper number of credits each semester
         for year in split_plan:
-            for term in year:
-                self.assertTrue(12 <= term['credits'] <= 18)
+            for term in split_plan[year]:
+                self.assertTrue(12 <= split_plan[year][term]['credits'] <= 18)
         # check that all core requirements are satisfied
         self.assertTrue((('SPAN', '3301W'), ('Fall', 'Frosh'), 3) in plan)
         self.assertTrue((('SPAN', '3302'), ('Spring', 'Frosh'), 3) in plan)
