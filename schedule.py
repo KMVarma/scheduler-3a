@@ -71,7 +71,7 @@ class Schedule:
 
     def fill_to_min(self):
         no_prereqs = self.get_rand_no_prereqs()
-        for semester in self.schedule:
+        for semester in self.schedule[:6]:
             if semester.hours == 0:
                 continue # skip completely empty semesters (early graduation or break)
             while semester.hours < self.MIN_HOURS:
