@@ -76,6 +76,8 @@ class Schedule:
                 choice = random.choice(no_prereqs)
                 if choice in self.taken:
                     no_prereqs.remove(choice)
+                elif semester.date[0] not in choice.terms or semester.hours + choice.hours > self.MAX_HOURS:
+                    continue
                 else:
                     semester.add(choice)
                     no_prereqs.remove(choice)
